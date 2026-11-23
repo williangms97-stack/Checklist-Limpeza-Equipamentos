@@ -2,7 +2,7 @@
 
 Aplicativo do celular (`index.html`) + painel do administrador (`painel.html`) para os checklists de
 limpeza das UBS e secadores. HTML + JavaScript puro, sem build. Publicado no GitHub Pages; banco
-no Supabase da conta corporativa (mesmo projeto do sistema de TSI, prefixo `ckl_`).
+no Supabase da conta corporativa (projeto próprio, separado do TSI; prefixo `ckl_`).
 
 **Leia `docs/CONTEXTO-DO-PROJETO.md`, `docs/ARQUITETURA.md` e `docs/ANALISE-DOS-CHECKLISTS.md`
 antes de mudar regras.** Configuração do Supabase: `supabase/LEIA-ME.md`.

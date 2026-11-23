@@ -21,7 +21,7 @@
     CHAVE_PUBLICA: '',
 
     /* Quem entra com nome de usuário (ex.: "joao") é procurado no Supabase como
-       joao@<DOMINIO_LOGIN>. Diferente do sistema de TSI, para os acessos não se misturarem. */
+       joao@<DOMINIO_LOGIN>. */
     DOMINIO_LOGIN: 'ckl.doismarcos.com.br',
 
     /* De quanto em quanto tempo (segundos) o aparelho busca novidades no servidor */

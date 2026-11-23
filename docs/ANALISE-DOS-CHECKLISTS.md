@@ -507,7 +507,7 @@ Sugestão: Supabase na conta corporativa, como no app de Fotos TSI (a confirmar 
 | D12–D15, D19 | Mantidos exatamente como no documento. |
 | D16 | Só o texto visível. |
 | D17/D18 | Texto mantido exatamente como no original (inclusive grafia). |
-| D20 | Supabase da conta corporativa, GitHub público, GitHub Pages, login no mesmo padrão do Fotos TSI. |
+| D20 | Supabase da conta corporativa, GitHub público, GitHub Pages, login no mesmo padrão do Fotos TSI. Em 23/11/2026: **projeto próprio no Supabase**, separado do TSI. |
 
 ## Dúvidas para validar antes de programar (respondidas acima)
 

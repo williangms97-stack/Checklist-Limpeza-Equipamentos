@@ -12,7 +12,7 @@
 -- - O navegador NÃO acessa as tabelas diretamente: tudo passa pelas funções ckl_*
 --   abaixo, que conferem quem está chamando (perfil e situação).
 -- - Fotos ficam no Storage, bucket privado "ckl-fotos".
--- - Prefixo ckl_ em tudo: convive com o sistema de TSI (tsi_*) no mesmo projeto.
+-- - Prefixo ckl_ em tudo. O sistema tem projeto próprio no Supabase (separado do TSI).
 -- - Primeiro administrador: o usuário admin@ckl.doismarcos.com.br (ver LEIA-ME.md).
 -- =============================================================================
 
@@ -158,7 +158,7 @@ end $$;
 -- 5. Perfil automático para cada usuário criado no Supabase Auth
 --    - admin@ckl.doismarcos.com.br vira Administrador ativo quando ainda não há um;
 --    - usuários criados pelo sistema (função ckl-usuarios) já vêm com perfil e ativos;
---    - qualquer outro (inclusive os do sistema de TSI) entra INATIVO e não acessa nada.
+--    - qualquer outro entra INATIVO e não acessa nada.
 -- ---------------------------------------------------------------------------
 create or replace function public.ckl_novo_usuario() returns trigger
 language plpgsql security definer set search_path = public as $$

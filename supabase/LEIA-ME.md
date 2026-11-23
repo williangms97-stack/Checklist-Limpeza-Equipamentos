@@ -3,35 +3,47 @@
 Passo a passo para colocar o banco central no ar. É feito uma vez só. Depois disso, o que for
 preenchido nos celulares aparece no painel do computador.
 
-O sistema usa o **mesmo projeto do Supabase da conta corporativa** do sistema de Fotos TSI. Tudo
-o que este arquivo cria começa com `ckl_` (e o bucket se chama `ckl-fotos`), então não mexe em
-nada do TSI.
+O sistema tem um **projeto próprio no Supabase**, na conta corporativa, separado do projeto do
+sistema de Fotos TSI: banco, fotos e usuários de um não se misturam com os do outro.
 
 | Arquivo | Para quê |
 |---|---|
 | `01_estrutura.sql` | Tabelas, regras de acesso, funções e o local das fotografias |
 | `functions/ckl-usuarios/index.ts` | Função que cria usuários e redefine senhas a partir do painel |
 
-## 1. Criar as tabelas
+## 1. Criar o projeto
 
-Supabase → **SQL Editor** → **New query** → cole o conteúdo inteiro de `01_estrutura.sql` → **Run**.
+Supabase (conta corporativa) → **New project**:
+
+- **Name:** `Checklist Limpeza` (ou outro nome que identifique)
+- **Database Password:** gere uma senha forte e guarde (não é usada pelo sistema, só pelo Supabase)
+- **Region:** South America (São Paulo)
+
+Espere o projeto terminar de ser criado (1 a 2 minutos).
+
+## 2. Desligar o cadastro livre
+
+Authentication → **Sign In / Providers** → desligue **Allow new users to sign up** → **Save**.
+
+Assim ninguém cria conta sozinho: os usuários só são criados pelo painel do sistema.
+
+## 3. Criar as tabelas
+
+**SQL Editor** → **New query** → cole o conteúdo inteiro de `01_estrutura.sql` → **Run**.
 
 Deve terminar com "Success. No rows returned". Pode ser executado de novo sem perder dados.
 
-> O cadastro livre ("Allow new users to sign up") já foi desligado na instalação do TSI. Se não
-> foi, desligue em Authentication → Sign In / Providers.
+## 4. Publicar a função de usuários
 
-## 2. Publicar a função de usuários
-
-Supabase → **Edge Functions** → **Deploy a new function** → **Via Editor**:
+**Edge Functions** → **Deploy a new function** → **Via Editor**:
 
 1. Nome da função: `ckl-usuarios` (exatamente assim).
 2. Apague o código de exemplo e cole o conteúdo inteiro de `functions/ckl-usuarios/index.ts`.
 3. Clique em **Deploy function**. Em **Details**, desligue **Verify JWT** (a função já confere o usuário).
 
-## 3. Criar o primeiro administrador
+## 5. Criar o primeiro administrador
 
-Supabase → **Authentication** → **Users** → **Add user** → **Create new user**:
+**Authentication** → **Users** → **Add user** → **Create new user**:
 
 - **Email:** `admin@ckl.doismarcos.com.br` (exatamente este)
 - **Password:** uma senha forte
@@ -40,23 +52,23 @@ Supabase → **Authentication** → **Users** → **Add user** → **Create new 
 Ele vira Administrador do checklist automaticamente. No sistema, entra com o usuário **admin**.
 Os demais usuários são criados pelo painel, em **Usuários**.
 
-> O domínio `ckl.doismarcos.com.br` é só um identificador interno (ninguém recebe e-mail). Ele é
-> diferente do usado no TSI para os acessos dos dois sistemas não se misturarem. Usuários criados
-> para um sistema aparecem como inativos no outro e não têm acesso a nada lá.
+> O domínio `ckl.doismarcos.com.br` é só um identificador interno (ninguém recebe e-mail).
 
-## 4. Informar o endereço do banco ao sistema
+## 6. Informar o endereço do banco ao sistema
 
-Supabase → **Project Settings** → **API Keys**. Copie a **Project URL** e a chave **publishable**
-(a mesma usada no TSI). No GitHub, abra `js/core/servidor.js`, clique no lápis e preencha:
+**Project Settings** → **API Keys**. Copie a **Project URL** e a chave **publishable**
+(`sb_publishable_...`). Elas podem ser passadas ao Claude, que preenche `js/core/servidor.js`,
+ou preenchidas direto no GitHub (abra o arquivo e clique no lápis):
 
 ```js
 URL: 'https://xxxxxxxx.supabase.co',
 CHAVE_PUBLICA: 'sb_publishable_...',
 ```
 
-**Nunca** coloque nesse arquivo a chave **secret** / **service_role**.
+**Nunca** coloque nesse arquivo (nem mande para ninguém) a chave **secret** / **service_role**
+nem a senha do banco.
 
-## 5. Primeiro uso
+## 7. Primeiro uso
 
 1. Abra o **painel** (`.../painel.html`) e entre com `admin`.
 2. Na tela **Acompanhamento** (ou **Modelos de checklist**), clique em **Carregar os checklists
@@ -71,12 +83,14 @@ Os checklists de teste feitos antes, sem servidor, ficam só no navegador onde f
 
 | Sintoma | O que conferir |
 |---|---|
-| "Este usuário não tem acesso ao sistema de checklist" | O passo 1 foi executado antes de criar o usuário? Se não, rode o SQL e crie o usuário de novo |
+| "Este usuário não tem acesso ao sistema de checklist" | O passo 3 foi executado antes de criar o usuário? Se não, rode o SQL e crie o usuário de novo |
 | admin entra como inativo | O e-mail é exatamente `admin@ckl.doismarcos.com.br`? |
 | "Não foi possível falar com a função ckl-usuarios" | A função foi publicada com esse nome? Veja Edge Functions → ckl-usuarios → Logs |
-| Fotos não sobem | O bucket `ckl-fotos` existe em Storage? (criado pelo passo 1) |
+| Fotos não sobem | O bucket `ckl-fotos` existe em Storage? (criado pelo passo 3) |
 | Painel continua dizendo "Dados neste aparelho" | `servidor.js` foi salvo com URL e chave? Recarregue com Ctrl+F5 |
+| Nada carrega e o painel do Supabase mostra o projeto "Paused" | No plano gratuito o projeto pausa após 7 dias sem uso. Clique em **Restore project**; os dados continuam lá |
 
 ## Espaço
 
-Cada foto ocupa ~300 KB. O plano gratuito do Supabase tem 1 GB de arquivos, dividido com o TSI.
+Cada foto ocupa ~300 KB. O plano gratuito do Supabase tem, por projeto, 1 GB de arquivos e 500 MB
+de banco — só para este sistema.

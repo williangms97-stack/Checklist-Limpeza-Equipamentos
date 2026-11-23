@@ -60,6 +60,6 @@ Decisões validadas com o usuário em 23/11/2026 (detalhes em `ANALISE-DOS-CHECK
 
 ## Banco central
 
-Supabase da conta corporativa (mesmo projeto do sistema de TSI), tudo com prefixo `ckl_`, bucket
+Supabase da conta corporativa, em projeto próprio (separado do TSI), tudo com prefixo `ckl_`, bucket
 `ckl-fotos`, login `usuario@ckl.doismarcos.com.br`. Repositório público no GitHub, publicado no
 GitHub Pages. Sem `servidor.js` preenchido, nada é enviado e nada aparece como sincronizado.
