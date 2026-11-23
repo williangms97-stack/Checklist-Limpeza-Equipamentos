@@ -17,8 +17,8 @@
   var CKL = global.CKL = global.CKL || {};
 
   CKL.servidor = {
-    URL: '',
-    CHAVE_PUBLICA: '',
+    URL: 'https://utkzhaxsicpsuzsxejsc.supabase.co',
+    CHAVE_PUBLICA: 'sb_publishable_pKpaPNI6ojLxjhCc4gUq_Q_pPvnWSwo',
 
     /* Quem entra com nome de usuário (ex.: "joao") é procurado no Supabase como
        joao@<DOMINIO_LOGIN>. */

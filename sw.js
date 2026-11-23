@@ -8,7 +8,7 @@
 
    Ao publicar uma nova versão, altere VERSAO (e CKL.config.VERSAO, mesmo número).
    ========================================================================== */
-const VERSAO = 'ckl-dois-marcos-1.0.1';
+const VERSAO = 'ckl-dois-marcos-1.0.2';
 
 const ARQUIVOS = [
   './',
