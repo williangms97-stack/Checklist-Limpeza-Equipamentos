@@ -1,0 +1,142 @@
+/* ==========================================================================
+   Tela de acesso
+   ========================================================================== */
+(function (global) {
+  'use strict';
+  const CKL = global.CKL;
+  const { ui, config: cfg } = CKL;
+  const { html, icone } = ui;
+  const CHAVE_PERFIL = 'ckl.ultimoPerfil';
+
+  const DICA = {
+    OPERADOR: 'Preenchimento dos checklists de limpeza na UBS e no secador.',
+    ADM: 'Painel de gestão: acompanhamento, não conformidades, relatórios, modelos e usuários.'
+  };
+
+  function perfilInicial() {
+    try {
+      const salvo = global.localStorage.getItem(CHAVE_PERFIL);
+      if (salvo === 'ADM' || salvo === 'OPERADOR') return salvo;
+    } catch (e) { /* sem armazenamento */ }
+    return global.matchMedia && global.matchMedia('(min-width: 900px)').matches ? 'ADM' : 'OPERADOR';
+  }
+
+  CKL.telas.login = {
+    /* entrada: 'app' (index.html), 'painel' (painel.html) ou '' (escolha do perfil na tela) */
+    montar(raiz, aoEntrar, entrada) {
+      const fixo = entrada === 'app' ? 'OPERADOR' : entrada === 'painel' ? 'ADM' : null;
+      const perfil = fixo || perfilInicial();
+      const titulo = fixo === 'OPERADOR' ? 'Aplicativo de checklist' : fixo === 'ADM' ? 'Painel do administrador' : 'Acesso ao sistema';
+      raiz.innerHTML = html`
+        <main class="login">
+          <div class="login-coluna">
+            <div class="login-marca">
+              <img class="login-logo" src="${CKL.recursos.logo}" alt="Dois Marcos Sementes" width="${CKL.recursos.logoLargura}" height="${CKL.recursos.logoAltura}">
+              <p class="login-sistema">${cfg.NOME_SISTEMA}</p>
+            </div>
+
+            <form class="login-cartao" id="form-login" novalidate>
+              <h1>${titulo}</h1>
+              ${fixo ? html`<input type="hidden" name="perfil" value="${fixo}">` : ''}
+              <fieldset class="segmentado" ${fixo ? ui.bruto('hidden disabled') : ''}>
+                <legend>Perfil de acesso</legend>
+                <label>
+                  <input type="radio" name="perfil" id="login-perfil-operador" value="OPERADOR" ${!fixo && perfil === 'OPERADOR' ? ui.bruto('checked') : ''}>
+                  <span>${icone('celular', 18)}Operador</span>
+                </label>
+                <label>
+                  <input type="radio" name="perfil" id="login-perfil-adm" value="ADM" ${!fixo && perfil === 'ADM' ? ui.bruto('checked') : ''}>
+                  <span>${icone('painel', 18)}Administrador</span>
+                </label>
+              </fieldset>
+              <p class="login-dica" id="login-dica">${DICA[perfil]}</p>
+
+              <div class="campo">
+                <label for="login-usuario">Usuário</label>
+                <input id="login-usuario" name="usuario" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+              </div>
+              <div class="campo">
+                <label for="login-senha">Senha</label>
+                <div class="campo-senha">
+                  <input id="login-senha" name="senha" type="password" autocomplete="current-password" required>
+                  <button type="button" class="btn-icone" id="login-ver-senha" aria-label="Mostrar senha" aria-pressed="false">${icone('olho', 20)}</button>
+                </div>
+              </div>
+              <p class="form-erro" id="login-erro" role="alert" hidden></p>
+              <button type="submit" class="btn btn-primario btn-g btn-bloco" id="login-entrar">Entrar</button>
+            </form>
+
+            <div class="login-demo" id="login-demo" hidden></div>
+            ${fixo === 'ADM' ? html`<p class="login-rodape"><a href="index.html">Abrir o aplicativo do celular</a></p>` : ''}
+            <p class="login-rodape">Versão ${cfg.VERSAO} · ${CKL.nuvem && CKL.nuvem.ativa ? 'Conectado ao servidor central' : 'Acesso demonstrativo · Dados guardados neste aparelho'}</p>
+          </div>
+        </main>`;
+
+      const form = raiz.querySelector('#form-login');
+      const erro = raiz.querySelector('#login-erro');
+      const senha = raiz.querySelector('#login-senha');
+      const perfilAtual = () => fixo || form.querySelector('input[name=perfil]:checked').value;
+
+      form.addEventListener('change', (ev) => {
+        if (ev.target.name !== 'perfil') return;
+        raiz.querySelector('#login-dica').textContent = DICA[perfilAtual()];
+        erro.hidden = true;
+      });
+
+      raiz.querySelector('#login-ver-senha').addEventListener('click', (ev) => {
+        const b = ev.currentTarget, mostrar = senha.type === 'password';
+        senha.type = mostrar ? 'text' : 'password';
+        b.setAttribute('aria-pressed', String(mostrar));
+        b.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+        b.innerHTML = icone(mostrar ? 'olhoOff' : 'olho', 20);
+      });
+
+      form.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        erro.hidden = true;
+        const botao = raiz.querySelector('#login-entrar');
+        ui.ocupar(botao, () => CKL.auth.entrar(form.usuario.value, senha.value, perfilAtual()).then(() => {
+          if (!fixo) { try { global.localStorage.setItem(CHAVE_PERFIL, perfilAtual()); } catch (e) { /* sem armazenamento */ } }
+          aoEntrar();
+        })).catch((e) => {
+          erro.textContent = ui.mensagemDe(e) + (e && e.codigo === 'SEM_PERFIL_ADM'
+            ? (fixo ? ' Use o aplicativo do celular.' : ' Selecione "Operador".') : '');
+          erro.hidden = false;
+          if (!e || !e.amigavel) console.error(e);
+          senha.select();
+        });
+      });
+
+      // Acessos iniciais ainda com a senha de fábrica: mostrados até o ADM redefinir as senhas
+      CKL.usuarios.acessosIniciaisAtivos().then((lista) => {
+        let acessos = lista;
+        if (fixo) acessos = acessos.filter((a) => a.perfil === fixo);
+        if (!acessos.length || !raiz.querySelector('#login-demo')) return;
+        const demo = raiz.querySelector('#login-demo');
+        demo.hidden = false;
+        demo.innerHTML = html`
+          <h2>${icone('info', 18)}Primeiro acesso</h2>
+          <p>Use os acessos iniciais abaixo e redefina as senhas em <strong>Usuários</strong>. Depois disso, este quadro deixa de aparecer.</p>
+          <ul>
+            ${acessos.map((a) => html`<li><span>${cfg.ROTULO_PERFIL[a.perfil]}</span><code>${a.usuario}</code><code>${a.senha}</code>
+              <button type="button" class="btn btn-fantasma btn-p" data-preencher="${a.usuario}">Preencher</button></li>`)}
+          </ul>`;
+        demo.addEventListener('click', (ev) => {
+          const b = ev.target.closest('[data-preencher]');
+          if (!b) return;
+          const a = acessos.filter((x) => x.usuario === b.dataset.preencher)[0];
+          form.usuario.value = a.usuario;
+          senha.value = a.senha;
+          if (!fixo) {
+            form.querySelector('input[name=perfil][value=' + a.perfil + ']').checked = true;
+            raiz.querySelector('#login-dica').textContent = DICA[a.perfil];
+          }
+          erro.hidden = true;
+          raiz.querySelector('#login-entrar').focus();
+        });
+      }).catch(() => { /* quadro opcional */ });
+
+      return () => { raiz.innerHTML = ''; };
+    }
+  };
+})(window);

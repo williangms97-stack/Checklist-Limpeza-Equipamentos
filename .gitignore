@@ -1,0 +1,9 @@
+# planilhas originais e exportadas (dados internos)
+*.xlsx
+*.xls
+*.xlsm
+# arquivos temporários
+~$*
+Thumbs.db
+desktop.ini
+.claude/settings.local.json
