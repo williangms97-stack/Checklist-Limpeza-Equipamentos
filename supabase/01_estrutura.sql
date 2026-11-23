@@ -151,6 +151,9 @@ begin
   foreach t in array array['ckl_perfis','ckl_modelos','ckl_modelos_versoes','ckl_execucoes','ckl_fotos','ckl_nao_conformidades','ckl_historico'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from anon, authenticated', t);
+    -- a função ckl-usuarios usa a chave de serviço; garantido mesmo em projeto criado
+    -- sem "Grant API access to new tables automatically"
+    execute format('grant all on public.%I to service_role', t);
   end loop;
 end $$;
 
