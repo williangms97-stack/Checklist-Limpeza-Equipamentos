@@ -28,7 +28,9 @@
     modelo: 'Modelo de checklist',
     nc: 'Não conformidade',
     usuario: 'Usuário',
-    cultivar: 'Cultivar'
+    cultivar: 'Cultivar',
+    veiculo: 'Registro de veículo',
+    motivo: 'Motivo de autorização'
   };
 
   function texto(v) {

@@ -34,9 +34,9 @@
   function fonte(doc, negrito, tam) { doc.setFont('BarlowCondensed', negrito ? 'bold' : 'normal'); doc.setFontSize(tam); }
   function alturaLinha(tam) { return tam * 0.3528 * 1.18; }
 
-  function novoDocumento() {
+  function novoDocumento(orientacao) {
     if (!global.jspdf || !global.jspdf.jsPDF) throw Erro('Biblioteca de PDF não carregada.');
-    var doc = new global.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+    var doc = new global.jspdf.jsPDF({ orientation: orientacao || 'portrait', unit: 'mm', format: 'a4', compress: true });
     doc.addFileToVFS('BarlowCondensed-Bold.ttf', CKL.fontesPdf.negrito);
     doc.addFont('BarlowCondensed-Bold.ttf', 'BarlowCondensed', 'bold');
     doc.addFileToVFS('BarlowCondensed-Medium.ttf', CKL.fontesPdf.medio);
@@ -327,6 +327,9 @@
   }
 
   CKL.pdf = {
+    /* peças usadas também pelo PDF dos veículos (js/servicos/pdf-veiculos.js) */
+    base: { t: t, cor: cor, fonte: fonte, alturaLinha: alturaLinha, COR: COR, novoDocumento: novoDocumento },
+    carregar: function () { return CKL.util.exigirBiblioteca('pdf', function () { return !!(global.jspdf && CKL.fontesPdf); }); },
     gerar: function (execucaoId) {
       return CKL.util.exigirBiblioteca('pdf', function () { return !!(global.jspdf && CKL.fontesPdf); }).then(function () {
         return Promise.all([CKL.execucoes.obter(execucaoId), CKL.execucoes.fotosDe(execucaoId).catch(function () { return []; }), CKL.naoConformidades.daExecucao(execucaoId)]);

@@ -97,6 +97,41 @@
           nome: 'Checklists de limpeza ' + util.dataLocal() + '.xlsx'
         };
       });
+    },
+
+    /** Limpeza de veículos: uma aba para as conferências e outra para as autorizações (já filtradas). */
+    exportarVeiculos: function (lista) {
+      return util.exigirBiblioteca('planilha', function () { return !!global.XLSX; }).then(function () {
+        var XLSX = global.XLSX, wb = XLSX.utils.book_new(), V = CKL.veiculos, RR = V.ROTULO_RESPOSTA;
+        var Rc = V.formulario('conferencia').rotulos, Ra = V.formulario('autorizacao').rotulos;
+        var ordem = lista.slice().sort(function (a, b) { return a.dataHora < b.dataHora ? -1 : 1; });
+        function base(v) { return { 'Protocolo': v.protocolo }; }
+        var conf = ordem.filter(function (v) { return v.tipo === 'conferencia'; }).map(function (v) {
+          var l = base(v);
+          l[Rc.dataHora] = dh(v.dataHora); l[Rc.turno] = V.ROTULO_TURNO[v.turno]; l[Rc.placa] = v.placa;
+          l['Placa a conferir'] = v.placaConferir ? 'Sim' : ''; l[Rc.origem] = v.origem;
+          l[Rc.identificacaoRetirada] = RR[v.identificacaoRetirada]; l[Rc.descarregadoCompleto] = RR[v.descarregadoCompleto];
+          l[Rc.grupoPeso + ' — ' + Rc.fechouPeso] = RR[v.fechouPeso]; l[Rc.responsavel] = v.responsavelNome; l[Rc.observacao] = v.observacao;
+          l['Fotos'] = (v.fotos || []).length; l['Correções'] = (v.correcoes || []).length;
+          return l;
+        });
+        var aut = ordem.filter(function (v) { return v.tipo === 'autorizacao'; }).map(function (v) {
+          var l = base(v);
+          l[Ra.dataHora] = dh(v.dataHora); l[Ra.placa] = v.placa; l['Placa a conferir'] = v.placaConferir ? 'Sim' : '';
+          l[Ra.motorista] = v.motorista; l[Ra.cultivarAnterior] = v.cultivarAnterior; l[Ra.motivo] = v.motivo;
+          l['Motivo do cadastro'] = v.motivoDoCadastro ? 'Sim' : 'Não'; l['Responsável'] = v.responsavelNome;
+          l[Ra.assinatura] = v.assinatura ? 'Assinado na tela em ' + dh(v.assinatura.em) : '';
+          l['Fotos'] = (v.fotos || []).length; l['Correções'] = (v.correcoes || []).length;
+          return l;
+        });
+        XLSX.utils.book_append_sheet(wb, aba(XLSX, conf, 'Nenhuma conferência no filtro'), 'Conferências');
+        XLSX.utils.book_append_sheet(wb, aba(XLSX, aut, 'Nenhuma autorização no filtro'), 'Autorizações');
+        var dados = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        return {
+          blob: new Blob([dados], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+          nome: 'Limpeza de veiculos ' + util.dataLocal() + '.xlsx'
+        };
+      });
     }
   };
 })(window);

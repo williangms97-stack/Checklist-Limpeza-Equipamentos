@@ -171,11 +171,12 @@
   usuarios.acessosIniciaisAtivos = function () { return Promise.resolve([]); };
   CKL.modelos.semear = function () { return Promise.resolve(false); };   // modelos vêm do servidor
   CKL.cultivares.semear = function () { return Promise.resolve(false); };   // cultivares vêm do servidor
+  CKL.motivos.semear = function () { return Promise.resolve(false); };
 
   /* ======================================================================
      Repositório: leitura no aparelho, gravação do ADM no servidor
      ====================================================================== */
-  var ORDEM_ENVIO = { modelos: 0, cultivares: 0, modelosVersoes: 1, execucoes: 1, naoConformidades: 2, fotos: 2, historico: 3 };
+  var ORDEM_ENVIO = { modelos: 0, cultivares: 0, motivos: 0, modelosVersoes: 1, execucoes: 1, veiculos: 1, naoConformidades: 2, fotos: 2, historico: 3 };
 
   function paraServidor(op) {
     var o = { colecao: op.colecao, tipo: op.tipo };
@@ -183,7 +184,7 @@
     else {
       o.valor = Object.assign({}, op.valor);
       if (op.colecao === 'fotos') delete o.valor.dados;
-      if (op.colecao === 'execucoes') { delete o.valor.situacaoEnvio; delete o.valor.erroEnvio; }
+      if (op.colecao === 'execucoes' || op.colecao === 'veiculos') { delete o.valor.situacaoEnvio; delete o.valor.erroEnvio; }
     }
     return o;
   }
@@ -213,7 +214,7 @@
     if (!doServidor.length) return local.lote(ops);
     return enviarLote(doServidor).then(function () {
       return local.lote(ops.map(function (o) {
-        if (o.colecao === 'execucoes' && o.valor) {
+        if ((o.colecao === 'execucoes' || o.colecao === 'veiculos') && o.valor) {
           return { colecao: o.colecao, tipo: o.tipo, valor: Object.assign({}, o.valor, { situacaoEnvio: cfg.SITUACAO_ENVIO.SINCRONIZADO, erroEnvio: null }) };
         }
         return o;
@@ -242,10 +243,12 @@
   /* ======================================================================
      Sincronização (baixar novidades)
      ====================================================================== */
-  var COLECOES_TODOS = ['modelos', 'execucoes', 'fotos', 'naoConformidades', 'cultivares'];
+  var COLECOES_TODOS = ['modelos', 'execucoes', 'fotos', 'naoConformidades', 'cultivares', 'veiculos', 'motivos'];
+  // coleções criadas por SQL posterior ao 01: se o servidor ainda não tem, o resto da sincronia continua
+  var COLECOES_OPCIONAIS = ['cultivares', 'veiculos', 'motivos'];
   var COLECOES_ADM = ['modelosVersoes', 'historico'];
   var EVENTO = { modelos: 'modelos:alterado', modelosVersoes: 'modelos:alterado', execucoes: 'execucoes:alterado', fotos: 'execucoes:alterado',
-    naoConformidades: 'nc:alterado', historico: 'execucoes:alterado', cultivares: 'cultivares:alterado' };
+    naoConformidades: 'nc:alterado', historico: 'execucoes:alterado', cultivares: 'cultivares:alterado', veiculos: 'veiculos:alterado', motivos: 'motivos:alterado' };
 
   function chaveCursor(colecao) { return 'ckl.cursor.' + (auth.ehAdm() ? 'ADM' : 'OP') + '.' + colecao; }
   function lerCursor(c) { try { return JSON.parse(global.localStorage.getItem(chaveCursor(c)) || 'null'); } catch (e) { return null; } }
@@ -262,7 +265,7 @@
       preparo = Promise.all(vivas.map(function (f) {
         return local.fotos.obter(f.id).then(function (atual) { return Object.assign({}, f, { dados: atual && atual.dados ? atual.dados : null }); });
       }));
-    } else if (colecao === 'execucoes') {
+    } else if (colecao === 'execucoes' || colecao === 'veiculos') {
       // checklist com alteração deste aparelho ainda não enviada: vale a versão do aparelho
       preparo = Promise.all(vivas.map(function (e) {
         return local.filaSincronizacao.umPorIndice('execucaoId', e.id).then(function (item) {
@@ -309,8 +312,8 @@
       emAndamento = colecoes.reduce(function (cadeia, c) {
         return cadeia.then(function () {
           return puxarColecao(c).then(function (n) { if (n) avisar[EVENTO[c]] = true; }, function (e) {
-            // cultivares: servidor ainda sem supabase/02_cultivares.sql não pode parar o resto da sincronia
-            if (c === 'cultivares') { console.warn('[sincronia] cultivares:', e && e.message); return; }
+            // servidor ainda sem os SQL 02/03 não pode parar o resto da sincronia
+            if (COLECOES_OPCIONAIS.indexOf(c) >= 0) { console.warn('[sincronia] ' + c + ':', e && e.message); return; }
             throw e;
           });
         });
@@ -379,6 +382,37 @@
         return rpc('ckl_enviar_execucao', { execucao: e, fotos: metas, naoConformidades: ncs || [], eventos: eventos });
       }).then(function (r) {
         if (r && r.situacao === 'ja_concluido') throw Erro('Este checklist já tinha sido enviado por outro aparelho.');
+      });
+    },
+    /* registro de veículo (conferência ou autorização): só vai depois de enviado; fotos no mesmo bucket */
+    enviarVeiculo: function (v, fotos) {
+      var metas = [], usadas = {};
+      (v.fotos || []).forEach(function (id) { usadas[id] = true; });
+      return fotos.filter(function (f) { return usadas[f.id]; }).reduce(function (cadeia, f) {
+        return cadeia.then(function () {
+          var caminho = f.caminho || ('execucoes/' + v.id + '/' + f.id + '.jpg');
+          var envio = f.dados && !f.caminho
+            ? sb.storage.from(S.BUCKET_FOTOS).upload(caminho, f.dados, { upsert: true, contentType: f.tipo || 'image/jpeg' })
+            : Promise.resolve({});
+          return envio.then(function (r) {
+            if (r && r.error) throw erroDoServidor(r.error, 'Falha ao enviar a fotografia.');
+            var meta = Object.assign({}, f, { caminho: caminho });
+            delete meta.dados;
+            metas.push(meta);
+            if (!f.caminho) return local.fotos.salvar(Object.assign({}, f, { caminho: caminho }));
+          }, function (e) { throw erroDoServidor(e); });
+        });
+      }, Promise.resolve()).then(function () {
+        return local.historico.porIndice('entidadeChave', 'veiculo:' + v.id);
+      }).then(function (eventos) {
+        var x = Object.assign({}, v);
+        delete x.situacaoEnvio; delete x.erroEnvio;
+        return rpc('ckl_enviar_veiculo', { veiculo: x, fotos: metas, eventos: eventos }).catch(function (e) {
+          if (/ckl_enviar_veiculo|function .* does not exist|Could not find the function/i.test((e && e.message) || '')) {
+            throw Erro('O servidor ainda não recebe registros de veículos. O administrador precisa rodar o supabase/03_veiculos.sql.');
+          }
+          throw e;
+        });
       });
     }
   });

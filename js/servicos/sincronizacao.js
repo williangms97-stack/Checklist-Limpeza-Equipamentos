@@ -23,11 +23,14 @@
     /** Situação de envio como deve aparecer na tela. */
     situacaoVisivel: function (s) { return !adaptador && s !== ENVIO.SINCRONIZADO ? ENVIO.LOCAL : s; },
 
-    /** Operações que colocam (ou mantêm) o checklist na fila, apontando para a versão atual. */
-    opsFila: function (exec) {
-      return repo().filaSincronizacao.umPorIndice('execucaoId', exec.id).then(function (atual) {
-        var item = Object.assign({}, atual || { id: util.uuid(), execucaoId: exec.id, criadoEm: util.agora(), tentativas: 0 }, {
-          rotulo: exec.nome + ' · ' + exec.protocolo, situacao: ENVIO.AGUARDANDO, versaoLocal: exec.alteradoEm, erro: null
+    /** Operações que colocam (ou mantêm) o registro na fila, apontando para a versão atual.
+        op: { colecao: 'execucoes' (padrão) ou 'veiculos', rotulo } */
+    opsFila: function (doc, op) {
+      op = op || {};
+      return repo().filaSincronizacao.umPorIndice('execucaoId', doc.id).then(function (atual) {
+        var item = Object.assign({}, atual || { id: util.uuid(), execucaoId: doc.id, criadoEm: util.agora(), tentativas: 0 }, {
+          colecao: op.colecao || 'execucoes',
+          rotulo: op.rotulo || (doc.nome + ' · ' + doc.protocolo), situacao: ENVIO.AGUARDANDO, versaoLocal: doc.alteradoEm, erro: null
         });
         return [{ colecao: 'filaSincronizacao', tipo: 'salvar', valor: item }];
       });
@@ -62,13 +65,16 @@
         var enviados = 0, falhas = 0;
         return pendentes.reduce(function (cadeia, item) {
           return cadeia.then(function () {
-            return Promise.all([repo().execucoes.obter(item.execucaoId), repo().fotos.porIndice('execucaoId', item.execucaoId),
-              repo().naoConformidades.porIndice('execucaoId', item.execucaoId)]).then(function (r) {
+            var colecao = item.colecao || 'execucoes', ehVeiculo = colecao === 'veiculos';
+            return Promise.all([repo()[colecao].obter(item.execucaoId), repo().fotos.porIndice('execucaoId', item.execucaoId),
+              ehVeiculo ? [] : repo().naoConformidades.porIndice('execucaoId', item.execucaoId)]).then(function (r) {
               var exec = r[0];
               if (!exec) return repo().filaSincronizacao.remover(item.id);
               if (adaptador.podeEnviar && !adaptador.podeEnviar(item, exec)) return null;
               var versaoEnviada = exec.alteradoEm;
-              return Promise.resolve().then(function () { return adaptador.enviarExecucao(exec, r[1], r[2], item); }).then(function () {
+              return Promise.resolve().then(function () {
+                return ehVeiculo ? adaptador.enviarVeiculo(exec, r[1], item) : adaptador.enviarExecucao(exec, r[1], r[2], item);
+              }).then(function () {
                 enviados++;
                 return { ok: true };
               }, function (e) {
@@ -76,7 +82,7 @@
                 return { ok: false, erro: (e && e.message) || 'Falha no envio' };
               }).then(function (res) {
                 // relê: se o checklist mudou durante o envio, continua aguardando para mandar a versão nova
-                return Promise.all([repo().execucoes.obter(item.execucaoId), repo().filaSincronizacao.obter(item.id)]).then(function (x) {
+                return Promise.all([repo()[colecao].obter(item.execucaoId), repo().filaSincronizacao.obter(item.id)]).then(function (x) {
                   var atual = x[0], it = x[1] || item;
                   if (!atual) return;
                   it.tentativas = (it.tentativas || 0) + 1;
@@ -84,13 +90,13 @@
                   if (!res.ok) { it.situacao = ENVIO.FALHA; it.erro = res.erro; atual.situacaoEnvio = ENVIO.FALHA; atual.erroEnvio = res.erro; }
                   else if (atual.alteradoEm === versaoEnviada) { it.situacao = ENVIO.SINCRONIZADO; it.erro = null; atual.situacaoEnvio = ENVIO.SINCRONIZADO; atual.erroEnvio = null; }
                   else { it.situacao = ENVIO.AGUARDANDO; }
-                  return repo().lote([{ colecao: 'filaSincronizacao', tipo: 'salvar', valor: it }, { colecao: 'execucoes', tipo: 'salvar', valor: atual }]);
+                  return repo().lote([{ colecao: 'filaSincronizacao', tipo: 'salvar', valor: it }, { colecao: colecao, tipo: 'salvar', valor: atual }]);
                 });
               });
             });
           });
         }, Promise.resolve()).then(function () {
-          if (enviados || falhas) CKL.eventos.emitir('execucoes:alterado', { origem: 'fila' });
+          if (enviados || falhas) { CKL.eventos.emitir('execucoes:alterado', { origem: 'fila' }); CKL.eventos.emitir('veiculos:alterado', { origem: 'fila' }); }
           return { configurada: true, online: true, enviados: enviados, falhas: falhas };
         });
       }).then(function (r) { emAndamento = null; return r; }, function (e) { emAndamento = null; throw e; });

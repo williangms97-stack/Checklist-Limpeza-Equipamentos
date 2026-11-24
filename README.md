@@ -1,9 +1,10 @@
 # Checklist de Limpeza de Equipamentos — Dois Marcos Sementes
 
 Sistema para registrar, acompanhar e comprovar a limpeza dos equipamentos das **UBS** e dos
-**secadores**, a partir dos 16 checklists originais da Qualidade (CKL UBS e CKL Secador).
+**secadores**, a partir dos 16 checklists originais da Qualidade (CKL UBS e CKL Secador), e a
+**limpeza de veículos** (conferência de descarga e autorização de liberação sem vistoria).
 
-- **Aplicativo do celular** (`index.html`): quem faz a vistoria escolhe a área (UBS ou Secador), o
+- **Aplicativo do celular** (`index.html`): quem faz a vistoria escolhe UBS, Secador ou Limpeza de veículo, o
   checklist, informa as cultivares e marca cada item como **C**, **NC** ou **Equipamento não
   solicitado**. Item NC: descrição, até 3 reavaliações, plano de ação e fotos. No fim: termo
   Liberada / Não Liberada (UBS), nome e assinatura do operador do ponto, e envio.
@@ -41,6 +42,7 @@ No celular, abra o endereço do aplicativo e use "Adicionar à tela inicial".
 | Arquivo | Conteúdo |
 |---|---|
 | [docs/ANALISE-DOS-CHECKLISTS.md](docs/ANALISE-DOS-CHECKLISTS.md) | Etapas 1 e 2: os 16 checklists item por item, comparação e decisões validadas |
+| [docs/ANALISE-VEICULOS.md](docs/ANALISE-VEICULOS.md) | Limpeza de veículos: conferência de descarga e autorização sem vistoria, decisões validadas |
 | [docs/CONTEXTO-DO-PROJETO.md](docs/CONTEXTO-DO-PROJETO.md) | Regras de negócio do sistema |
 | [docs/ARQUITETURA.md](docs/ARQUITETURA.md) | Como o código está organizado e onde está cada regra |
 | [supabase/LEIA-ME.md](supabase/LEIA-ME.md) | Passo a passo para ligar o banco central |

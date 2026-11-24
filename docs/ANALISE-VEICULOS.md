@@ -106,3 +106,22 @@ incompletas, sem fechamento de peso, identificação não retirada) e relatório
 - **V10.** Relatório PDF: por **período**, no mesmo formato da planilha (uma linha por veículo, folha
   deitada), além do PDF de cada registro? Excel com uma aba por formulário.
 - **V11.** Placa: aceitar o formato antigo (ABC-1234) e o Mercosul (ABC1D23), conferindo o formato?
+
+---
+
+## 5. Decisões validadas (24/11/2026)
+
+| Nº | Decisão |
+|---|---|
+| Entrada | Depois do login, a primeira tela pergunta: **UBS**, **Secador** ou **Limpeza de veículo** (operador e administrador). |
+| V1 | Conferência segue a **Planilha2** (Data/Hora juntas, opções impressas). |
+| V2 | Turno **sugerido pela hora**: Diurno das 07:00 às 18:59; Noturno das 19:00 às 06:59. O usuário pode trocar. |
+| V3 | Origem **BUNGE**: "O veículo fechou o peso?" vira **"Não se aplica (Bunge)"** automaticamente. |
+| V4 | Resposta **NÃO**: fica destacada no painel e a **observação passa a ser obrigatória**; não abre não conformidade. |
+| V5 | "Responsável pela Abordagem" = **usuário logado** (automático). |
+| V6 | Autorização: o **próprio usuário logado** é o responsável e **assina na tela**; assinatura **obrigatória**. |
+| V7 | Motivo: **texto livre**, com opção de escolher um **motivo do cadastro** (painel → Motivos de autorização). |
+| V8 | Fotos **opcionais**. |
+| V9 | Sem versão nem data de aprovação por enquanto (mostra só o que está no documento). |
+| V10 | PDF **por período** no formato da planilha (folha deitada, um veículo por linha) **e** PDF de cada registro. |
+| V11 | Placa: aceita o formato antigo (ABC-1234) e o Mercosul (ABC1D23); fora disso, **avisa** que pode estar incorreta, sem bloquear. |

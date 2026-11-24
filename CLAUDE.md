@@ -4,7 +4,7 @@ Aplicativo do celular (`index.html`) + painel do administrador (`painel.html`) p
 limpeza das UBS e secadores. HTML + JavaScript puro, sem build. Publicado no GitHub Pages; banco
 no Supabase da conta corporativa (projeto próprio, separado do TSI; prefixo `ckl_`).
 
-**Leia `docs/CONTEXTO-DO-PROJETO.md`, `docs/ARQUITETURA.md` e `docs/ANALISE-DOS-CHECKLISTS.md`
+**Leia `docs/CONTEXTO-DO-PROJETO.md`, `docs/ARQUITETURA.md`, `docs/ANALISE-DOS-CHECKLISTS.md` e `docs/ANALISE-VEICULOS.md`
 antes de mudar regras.** Configuração do Supabase: `supabase/LEIA-ME.md`.
 
 ## Regras de trabalho

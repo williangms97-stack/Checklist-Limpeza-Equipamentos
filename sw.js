@@ -8,7 +8,7 @@
 
    Ao publicar uma nova versão, altere VERSAO (e CKL.config.VERSAO, mesmo número).
    ========================================================================== */
-const VERSAO = 'ckl-dois-marcos-1.1.0';
+const VERSAO = 'ckl-dois-marcos-1.2.0';
 
 const ARQUIVOS = [
   './',
@@ -26,17 +26,21 @@ const ARQUIVOS = [
   './js/core/repositorio.js',
   './js/dados/modelos-originais.js',
   './js/dados/cultivares-iniciais.js',
+  './js/dados/formularios-veiculos.js',
   './js/servicos/historico.js',
   './js/servicos/auth.js',
   './js/servicos/usuarios.js',
   './js/servicos/modelos.js',
+  './js/servicos/cadastro-simples.js',
   './js/servicos/cultivares.js',
   './js/servicos/sincronizacao.js',
   './js/servicos/execucoes.js',
   './js/servicos/nao-conformidades.js',
+  './js/servicos/veiculos.js',
   './js/servicos/imagem.js',
   './js/servicos/arquivos.js',
   './js/servicos/pdf.js',
+  './js/servicos/pdf-veiculos.js',
   './js/servicos/excel.js',
   './vendor/supabase.js',
   './js/servicos/nuvem.js',
@@ -44,12 +48,14 @@ const ARQUIVOS = [
   './js/ui/graficos.js',
   './js/ui/assinatura.js',
   './js/ui/login.js',
+  './js/ui/veiculos-app.js',
   './js/ui/operador.js',
   './js/ui/adm/comum.js',
   './js/ui/adm/estrutura.js',
   './js/ui/adm/painel.js',
   './js/ui/adm/checklists.js',
   './js/ui/adm/nc.js',
+  './js/ui/adm/veiculos.js',
   './js/ui/adm/modelos.js',
   './js/ui/adm/cultivares.js',
   './js/ui/adm/usuarios.js',

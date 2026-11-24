@@ -1,7 +1,7 @@
 /* ==========================================================================
    Aplicativo do celular — quem faz a vistoria
-   Fluxo: Área → checklist → cultivares → itens (C / NC / Não solicitado) →
-          revisão (pendências, termo, operador do local e assinatura) → envio
+   Fluxo: início (UBS / Secador / Limpeza de veículo) → checklist → cultivares →
+          itens (C / NC / Não solicitado) → revisão (pendências, termo, operador e assinatura) → envio
    ========================================================================== */
 (function (global) {
   'use strict';
@@ -46,9 +46,14 @@
         elProgresso.hidden = false;
         elBarraProgresso.style.width = (r.total ? (r.avaliados / r.total) * 100 : 0).toFixed(1) + '%';
       }
+      // limpeza de veículos (js/ui/veiculos-app.js)
+      const vei = CKL.telas.veiculosApp({ elConteudo: elConteudo, topo: topo, barra: barra, ir: ir, estado: estado });
+      const telaVeiculo = (t) => t === 'veiculos' || t.indexOf('vei-') === 0;
+
       function ir(tela, extra) {
         if (!montado) return;
         guardarTextos();
+        vei.guardar();
         Object.assign(estado, { tela: tela }, extra || {});
         global.scrollTo(0, 0);
         desenhar();
@@ -56,14 +61,15 @@
       function desenhar() {
         const t = estado.tela;
         progresso(null);
-        const p = t === 'inicio' ? telaInicio() : t === 'area' ? telaAreas() : t === 'lista' ? telaLista() : t === 'abrir' ? telaAbrir()
+        const p = telaVeiculo(t) ? vei.desenhar(t) : t === 'inicio' ? telaInicio() : t === 'area' ? telaAreas() : t === 'lista' ? telaLista() : t === 'abrir' ? telaAbrir()
           : t === 'execucao' ? telaExecucao() : t === 'revisao' ? telaRevisao() : t === 'enviado' ? telaEnviado() : t === 'ver' ? telaVer() : telaInicio();
         Promise.resolve(p).catch(ui.erro);
       }
       function voltar() {
         const t = estado.tela;
-        if (t === 'area') ir('inicio');
-        else if (t === 'lista') ir('area');
+        if (telaVeiculo(t)) vei.voltar(t);
+        else if (t === 'area') ir('inicio');
+        else if (t === 'lista') ir('inicio');
         else if (t === 'abrir') ir('lista');
         else if (t === 'execucao') ir('inicio');
         else if (t === 'revisao') ir('execucao');
@@ -118,23 +124,46 @@
       function telaInicio() {
         exec = null;
         topo('Olá, ' + usuario.nome.split(' ')[0], cfg.NOME_CURTO, false);
-        barra(html`<button type="button" class="btn btn-primario btn-g btn-bloco" data-acao="novo">${icone('mais', 22)}<span>Iniciar checklist</span></button>`);
+        barra(null);
         elConteudo.innerHTML = html`<p class="texto-menor">Carregando…</p>`;
-        return Promise.all([CKL.execucoes.meus(), CKL.modelos.ativos()]).then(([meus, modelos]) => {
+        return Promise.all([CKL.execucoes.meus(), CKL.modelos.ativos(), CKL.veiculos.meus()]).then(([meus, modelos, veics]) => {
           const andamento = meus.filter((e) => e.status === ST.EM_ANDAMENTO);
-          const enviados = meus.filter((e) => e.status === ST.CONCLUIDO || e.status === ST.CONCLUIDO_NC).slice(0, 15);
-          const aguardando = meus.filter((e) => e.situacaoEnvio !== cfg.SITUACAO_ENVIO.SINCRONIZADO && e.status !== ST.EM_ANDAMENTO).length;
+          const veiAndamento = veics.filter((v) => v.status === ST.EM_ANDAMENTO);
+          // checklists e veículos enviados, do mais recente para o mais antigo
+          const enviados = meus.filter((e) => e.status === ST.CONCLUIDO || e.status === ST.CONCLUIDO_NC).map((e) => ({ quando: e.concluidoEm || e.iniciadoEm, html: itemExecucao(e, 'ver') }))
+            .concat(veics.filter((v) => v.status === ST.CONCLUIDO).map((v) => ({ quando: v.concluidoEm || v.dataHora, html: vei.itemLista(v, 'vei-abrir') })))
+            .sort((a, b) => (a.quando < b.quando ? 1 : -1)).slice(0, 15);
+          const aguardando = meus.concat(veics).filter((e) => e.situacaoEnvio !== cfg.SITUACAO_ENVIO.SINCRONIZADO && e.status !== ST.EM_ANDAMENTO && e.status !== 'descartado').length;
+          const areas = CKL.modelos.areas(modelos).filter((a) => modelos.some((m) => m.area === a.id));
           elConteudo.innerHTML = html`
-            ${!modelos.length ? html`<div class="alerta alerta-alerta">${icone('alerta', 20)}<div><strong>Nenhum checklist disponível.</strong><p>${CKL.nuvem && CKL.nuvem.ativa ? 'Os modelos ainda não foram baixados do servidor. Conecte-se à internet ou peça ao administrador para carregar os checklists no painel.' : 'Os modelos ainda não foram carregados.'}</p></div></div>` : ''}
-            ${andamento.length ? html`
+            <section class="op-secao">
+              <div class="op-secao-topo"><h2>O que você vai fazer?</h2></div>
+              <div class="ck-areas">
+                ${areas.map((a) => html`
+                  <button type="button" class="ck-area" data-acao="area" data-area="${a.id}">
+                    <span class="ck-area-icone">${icone(a.icone, 34)}</span>
+                    <span class="ck-area-texto"><strong>${a.rotulo}</strong><span>${a.descricao}</span>
+                      <small>${util.plural(modelos.filter((m) => m.area === a.id).length, 'checklist', 'checklists')}</small></span>
+                    ${icone('avancar', 24)}
+                  </button>`)}
+                <button type="button" class="ck-area ck-area-veiculo" data-acao="veiculos">
+                  <span class="ck-area-icone">${icone('caminhao', 34)}</span>
+                  <span class="ck-area-texto"><strong>Limpeza de veículo</strong><span>Conferência de descarga e autorização sem vistoria</span>
+                    <small>2 formulários</small></span>
+                  ${icone('avancar', 24)}
+                </button>
+              </div>
+            </section>
+            ${!modelos.length ? html`<div class="alerta alerta-alerta">${icone('alerta', 20)}<div><strong>Checklists de UBS e secador indisponíveis.</strong><p>${CKL.nuvem && CKL.nuvem.ativa ? 'Os modelos ainda não foram baixados do servidor. Conecte-se à internet ou peça ao administrador para carregar os checklists no painel.' : 'Os modelos ainda não foram carregados.'}</p></div></div>` : ''}
+            ${andamento.length || veiAndamento.length ? html`
               <section class="op-secao">
                 <div class="op-secao-topo"><h2>Em andamento</h2></div>
-                <div class="op-lista">${andamento.map((e) => itemExecucao(e, 'continuar'))}</div>
+                <div class="op-lista">${andamento.map((e) => itemExecucao(e, 'continuar'))}${veiAndamento.map((v) => vei.itemLista(v, 'vei-continuar'))}</div>
               </section>` : ''}
             <section class="op-secao">
               <div class="op-secao-topo"><h2>Enviados por mim</h2>${aguardando && CKL.sincronizacao.configurada() ? ui.seloSimples(util.plural(aguardando, 'aguardando envio', 'aguardando envio'), 'selo-pendente', 'relogio') : ''}</div>
-              ${enviados.length ? html`<div class="op-lista">${enviados.map((e) => itemExecucao(e, 'ver'))}</div>`
-                : html`<p class="op-ajuda">Os checklists que você enviar aparecem aqui.</p>`}
+              ${enviados.length ? html`<div class="op-lista">${enviados.map((x) => x.html)}</div>`
+                : html`<p class="op-ajuda">Os checklists e registros de veículo que você enviar aparecem aqui.</p>`}
             </section>
             <p class="op-nota">${icone(CKL.sincronizacao.configurada() ? 'nuvem' : 'celular', 16)}<span>${CKL.sincronizacao.configurada() ? 'Os checklists são enviados ao servidor sozinhos quando há internet.' : 'Dados guardados só neste aparelho (servidor central ainda não configurado).'}</span></p>`;
         });
@@ -177,7 +206,7 @@
 
       /* ---------------- 2. Checklist da área ---------------- */
       function telaLista() {
-        topo(estado.area, 'Novo checklist · passo 2 de 3', true);
+        topo(estado.area, 'Novo checklist · passo 1 de 2', true);
         barra(null);
         return Promise.all([CKL.modelos.ativos(), CKL.execucoes.listar()]).then(([modelos, todas]) => {
           const lista = modelos.filter((m) => m.area === estado.area);
@@ -206,7 +235,7 @@
 
       /* ---------------- 3. Dados iniciais ---------------- */
       function telaAbrir() {
-        topo('Informações iniciais', 'Novo checklist · passo 3 de 3', true);
+        topo('Informações iniciais', 'Novo checklist · passo 2 de 2', true);
         return Promise.all([CKL.modelos.obter(estado.modeloId), CKL.execucoes.meus(), CKL.cultivares.opcoes()]).then(([m, meus, cultivares]) => {
           if (!m) { ir('lista'); return; }
           const aberto = meus.filter((e) => e.modeloId === m.id && e.status === ST.EM_ANDAMENTO)[0];
@@ -601,7 +630,9 @@
         const a = b.dataset.acao;
         if (a === 'voltar') voltar();
         else if (a === 'menu') abrirMenu();
-        else if (a === 'novo') ir('area');
+        else if (a === 'novo') ir('inicio');
+        else if (a === 'veiculos') ir('veiculos');
+        else if (a.indexOf('vei-') === 0) vei.aoClicar(b, a);
         else if (a === 'area') ir('lista', { area: b.dataset.area });
         else if (a === 'modelo') ir('abrir', { modeloId: b.dataset.modelo });
         else if (a === 'iniciar') iniciar(b);
@@ -636,10 +667,12 @@
         else if (a === 'compartilhar') ui.compartilharPdf(estado.execId, b);
       }
       function aoDigitar(ev) {
+        if (telaVeiculo(estado.tela)) { vei.aoDigitar(ev); return; }
         const el = ev.target;
         if (el.dataset && el.dataset.campo && exec) agendarTexto(el);
       }
       function aoMudar(ev) {
+        if (telaVeiculo(estado.tela)) { vei.aoMudar(ev); return; }
         const el = ev.target;
         if (el.matches('input[type=file][data-foto]')) { receberFoto(el); return; }
         if (el.name === 'termo' && exec) { CKL.execucoes.definirGerais(exec.id, { termo: el.value }).then((e) => { exec = e; atualizarPendencias(); }).catch(ui.erro); return; }
@@ -658,7 +691,7 @@
       const aoConexao = () => { if (montado && ['inicio', 'area', 'lista'].indexOf(estado.tela) >= 0) desenhar(); else if (montado) { const t = elTopo.querySelector('.op-topo-titulo strong'); if (t) topo(t.textContent, (elTopo.querySelector('.op-topo-titulo span') || {}).textContent, estado.tela !== 'inicio' && estado.tela !== 'enviado'); } };
       const aoMudarDados = (d) => {
         if (!montado || (d && d.origem !== 'servidor' && d.origem !== 'fila')) return;
-        if (estado.tela === 'inicio' || estado.tela === 'lista') desenhar();
+        if (estado.tela === 'inicio' || estado.tela === 'lista' || estado.tela === 'veiculos') desenhar();
       };
       raiz.addEventListener('click', aoClicar);
       raiz.addEventListener('input', aoDigitar);
@@ -666,9 +699,10 @@
       const desligar = [
         CKL.eventos.ouvir('conexao:alterada', aoConexao),
         CKL.eventos.ouvir('execucoes:alterado', aoMudarDados),
+        CKL.eventos.ouvir('veiculos:alterado', aoMudarDados),
         CKL.eventos.ouvir('modelos:alterado', () => { if (montado && ['inicio', 'area', 'lista'].indexOf(estado.tela) >= 0) desenhar(); })
       ];
-      const antesDeSair = () => { guardarTextos(); };
+      const antesDeSair = () => { guardarTextos(); vei.guardar(); };
       global.addEventListener('pagehide', antesDeSair);
 
       // retoma o checklist em andamento mais recente? Não: o início mostra a lista, com um toque para continuar.
@@ -679,6 +713,7 @@
       return function desmontar() {
         montado = false;
         guardarTextos();
+        vei.sair();
         observarFotos.disconnect();
         raiz.removeEventListener('click', aoClicar);
         raiz.removeEventListener('input', aoDigitar);

@@ -11,8 +11,10 @@
     { id: 'painel', rotulo: 'Acompanhamento', icone: 'painel' },
     { id: 'checklists', rotulo: 'Checklists e relatórios', icone: 'checklist' },
     { id: 'nc', rotulo: 'Não conformidades', icone: 'alerta' },
+    { id: 'veiculos', rotulo: 'Limpeza de veículos', icone: 'caminhao' },
     { id: 'modelos', rotulo: 'Modelos de checklist', icone: 'planilha' },
     { id: 'cultivares', rotulo: 'Cultivares', icone: 'semente' },
+    { id: 'motivos', rotulo: 'Motivos de autorização', icone: 'assinatura' },
     { id: 'usuarios', rotulo: 'Usuários', icone: 'usuarios' },
     { id: 'historico', rotulo: 'Histórico', icone: 'historico' }
   ];

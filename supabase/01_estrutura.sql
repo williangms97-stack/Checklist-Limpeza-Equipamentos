@@ -234,6 +234,8 @@ language sql immutable as $$
     when 'naoConformidades' then 'ckl_nao_conformidades'
     when 'historico' then 'ckl_historico'
     when 'cultivares' then 'ckl_cultivares'   -- tabela criada no 02_cultivares.sql
+    when 'veiculos' then 'ckl_veiculos'       -- tabelas criadas no 03_veiculos.sql
+    when 'motivos' then 'ckl_motivos'
   end;
 $$;
 
@@ -272,12 +274,13 @@ begin
     raise exception 'Coleção inválida: %', v_colecao using errcode = 'P0001';
   end if;
   if eu.perfil <> 'ADM' then
-    -- operador: modelos de todos; checklists, fotos e NCs só os próprios
+    -- operador: modelos e cadastros de todos; checklists, veículos, fotos e NCs só os próprios
     if v_colecao in ('historico', 'modelosVersoes') then
       return jsonb_build_object('linhas', '[]'::jsonb);
-    elsif v_colecao = 'execucoes' then
+    elsif v_colecao in ('execucoes', 'veiculos') then
       v_filtro := format(' and responsavel_id = %L', eu.id::text);
     elsif v_colecao in ('fotos', 'naoConformidades') then
+      -- (o 03_veiculos.sql troca esta função para incluir as fotos dos registros de veículo)
       v_filtro := format(' and execucao_id in (select e.id from public.ckl_execucoes e where e.responsavel_id = %L)', eu.id::text);
     end if;
   end if;

@@ -176,3 +176,26 @@
   .ck-escolha { grid-template-columns: 1fr 1fr; }
   .ck-opcao-ns { grid-column: 1 / -1; }
 }
+
+/* ---------- Limpeza de veículos ---------- */
+.ck-area-veiculo .ck-area-icone { background: var(--amarelo-100); color: var(--verde-800); }
+.vei-campo { display: flex; flex-direction: column; gap: 8px; }
+.vei-campo > .vei-rotulo { font: 600 15px/1.25 var(--fonte-texto); color: var(--tinta); }
+.vei-campo > .vei-rotulo small { font-weight: 500; color: var(--tinta-3); }
+.vei-escolha { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; }
+.vei-escolha .ck-opcao { min-height: 52px; font-size: 18px; }
+.vei-escolha .ck-opcao.marcada { background: var(--verde-700); border-color: var(--verde-700); color: #fff; }
+.vei-escolha .vei-sim.marcada { background: var(--ok); border-color: var(--ok); }
+.vei-escolha .vei-nao.marcada { background: var(--erro); border-color: var(--erro); }
+.vei-na { padding: 12px 14px; border-radius: var(--raio); background: var(--neutro-fundo); color: var(--tinta-2); font-weight: 600; }
+.vei-grupo { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: var(--raio); border: 1px solid var(--linha); background: var(--superficie-2); }
+.vei-grupo > h4 { font: 700 16px/1.2 var(--fonte-titulo); letter-spacing: 0.02em; color: var(--verde-800); text-transform: uppercase; }
+.vei-aviso { display: flex; gap: 6px; align-items: flex-start; font-size: 13.5px; color: var(--alerta); }
+.vei-placa { text-transform: uppercase; font: 700 22px/1.2 var(--fonte-titulo); letter-spacing: 0.08em; }
+.vei-auto { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vei-alertas { margin: 0; padding-left: 18px; }
+.ck-item-alerta { border-left: 4px solid var(--erro); }
+.indicador-erro .indicador-valor { color: var(--erro); }
+.indicador-alerta .indicador-valor { color: var(--alerta); }
+.linha-alerta td:first-child { box-shadow: inset 4px 0 0 var(--erro); }
+.texto-erro { color: var(--erro); }

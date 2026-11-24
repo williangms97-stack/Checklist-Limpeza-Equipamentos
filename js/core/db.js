@@ -36,6 +36,12 @@
       // cadastro de cultivares (cultivar anterior / próxima cultivar)
       criar('cultivares', { keyPath: 'id' }, [['nome', 'nome']]);
     }
+    if (versaoAnterior < 3) {
+      // limpeza de veículos: conferências de descarga e autorizações sem vistoria
+      criar('veiculos', { keyPath: 'id' }, [['tipo', 'tipo'], ['responsavelId', 'responsavelId'], ['status', 'status'], ['dataHora', 'dataHora']]);
+      // motivos padrão da autorização sem vistoria
+      criar('motivos', { keyPath: 'id' }, [['nome', 'nome']]);
+    }
   }
 
   function abrir() {

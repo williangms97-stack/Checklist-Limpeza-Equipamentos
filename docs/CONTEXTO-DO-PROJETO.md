@@ -4,6 +4,7 @@ Decisões validadas com o usuário em 23/11/2026 (detalhes em `ANALISE-DOS-CHECK
 
 ## Estrutura
 
+- **Entrada:** depois do login, a primeira tela pergunta **UBS**, **Secador** ou **Limpeza de veículo**.
 - **Área → checklist.** Áreas: UBS (01, 03, 04, 05, 06) e Secador (01 a 08, Básica 09, 10, 11).
   Nenhum equipamento é compartilhado entre checklists; cada um mantém nome, código, versão e itens
   do documento original.
@@ -35,6 +36,25 @@ Decisões validadas com o usuário em 23/11/2026 (detalhes em `ANALISE-DOS-CHECK
 - **Assinaturas:** quem entra no aplicativo é o responsável pela vistoria (equipe de controle de
   qualidade). Do operador do ponto: nome obrigatório e assinatura na tela (opcional).
 - Não envia enquanto houver pendência; a tela lista cada uma com atalho para o campo.
+
+## Limpeza de veículos
+
+Decisões validadas em 24/11/2026 (detalhes em `ANALISE-VEICULOS.md`). Dois formulários, um registro
+por veículo, preenchido numa tela só (`js/dados/formularios-veiculos.js`, textos originais):
+
+- **Conferência de descarga do veículo** ("Limpeza De Veiculos", Planilha2): data/hora automática;
+  turno sugerido pela hora (Diurno 07:00–18:59, Noturno 19:00–06:59; pode trocar); placa; origem
+  CAMPO / BUNGE / TRANS.; três perguntas SIM/NÃO. **BUNGE**: "fechou o peso?" = Não se aplica.
+  **Qualquer NÃO** exige observação e fica destacado no painel (não abre não conformidade).
+  Responsável pela abordagem = quem está logado.
+- **Autorização de liberação sem vistoria** ("Limpeza de Caçamba"): placa, nome do motorista,
+  cultivar anterior (cadastro de cultivares), motivo (texto livre ou do cadastro **Motivos de
+  autorização**) e **assinatura obrigatória** de quem está logado.
+- **Placa:** aceita ABC-1234 e ABC1D23; fora disso avisa ("placa a conferir"), sem bloquear.
+- Fotos opcionais. Rascunho fica só no aparelho (pode ser descartado); enviado, só o administrador
+  corrige (motivo obrigatório, histórico). Sem versão nem data de aprovação (os documentos não têm).
+- **Painel → Limpeza de veículos:** filtros, indicadores, PDF de cada registro, PDF do período no
+  formato da planilha (folha deitada) e Excel.
 
 ## Situação e rastreabilidade
 
