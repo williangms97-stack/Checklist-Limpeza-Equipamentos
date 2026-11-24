@@ -21,7 +21,7 @@
         <div id="md-lista"><p class="texto-menor">Carregando…</p></div>
         <div id="md-veiculos"></div>`;
 
-      CKL.telas.adm.avisoCadastrosLocais(el.querySelector('#md-locais'));
+      CKL.telas.adm.avisoCadastrosLocais(el.querySelector('#md-locais'), { situacao: true });
       function carregar() {
         desenharVeiculos();
         return CKL.modelos.listar().then((l) => { if (!montado) return; modelos = l; desenhar(); }).catch(ui.erro);

@@ -126,9 +126,14 @@
         const sinc = CKL.nuvem && CKL.nuvem.ativa ? CKL.nuvem.sincronia : null;
         if (!sinc) return html`<div class="alerta alerta-alerta" data-sem-modelos="1">${icone('alerta', 20)}<div><strong>Checklists de UBS e secador indisponíveis.</strong><p>Os modelos ainda não foram carregados.</p></div></div>`;
         if (sinc.rodando()) return html`<div class="alerta alerta-info" data-sem-modelos="1">${icone('atualizar', 20)}<div><strong>Baixando os checklists do servidor…</strong><p>Na primeira vez pode levar alguns segundos.</p></div></div>`;
-        const f = sinc.falha();
+        const f = sinc.falha(), c = sinc.consulta(), ok = sinc.ultima();
+        // o servidor respondeu sem erro e não mandou nenhum modelo: o problema é o servidor estar sem checklists
+        const quando = c ? c.em : ok;
+        const texto = f ? 'Não foi possível baixar do servidor: ' + f.mensagem
+          : quando ? 'O servidor central foi consultado às ' + util.fmtDataHora(quando) + ' e não tem nenhum checklist de UBS ou secador cadastrado. Peça ao administrador para carregar os checklists no servidor.'
+          : 'Os modelos ainda não foram baixados do servidor. Confira a internet e toque em "Tentar de novo".';
         return html`<div class="alerta alerta-alerta" data-sem-modelos="1">${icone('alerta', 20)}<div><strong>Checklists de UBS e secador indisponíveis.</strong>
-          <p>${f ? 'Não foi possível baixar do servidor: ' + f.mensagem : 'Os modelos ainda não foram baixados do servidor. Confira a internet ou peça ao administrador para carregar os checklists no painel.'}</p>
+          <p>${texto}</p>
           <button type="button" class="btn btn-secundario" data-acao="baixar-modelos">${icone('atualizar', 18)}<span>Tentar de novo</span></button></div></div>`;
       }
 
@@ -645,7 +650,11 @@
         else if (a === 'novo') ir('inicio');
         else if (a === 'veiculos') ir('veiculos');
         else if (a === 'baixar-modelos') {
-          ui.ocupar(b, () => CKL.nuvem.sincronia.ciclo()).then(() => desenhar()).catch(ui.erro);
+          // baixa do começo (ignora o marcador do aparelho) e diz quantos checklists o servidor mandou
+          ui.ocupar(b, () => CKL.nuvem.sincronia.baixarTudo(['modelos', 'cultivares', 'motivos', 'documentosVeiculo'])).then((r) => {
+            ui.aviso(r.modelos ? util.plural(r.modelos, 'checklist recebido', 'checklists recebidos') + ' do servidor.' : 'O servidor não mandou nenhum checklist.', r.modelos ? 'ok' : 'alerta', 7000);
+            desenhar();
+          }).catch((e) => { ui.erro(e); desenhar(); });
         }
         else if (a.indexOf('vei-') === 0) vei.aoClicar(b, a);
         else if (a === 'area') ir('lista', { area: b.dataset.area });

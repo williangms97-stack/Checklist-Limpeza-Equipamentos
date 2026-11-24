@@ -316,7 +316,7 @@
     return pagina().then(function () { if (ultimo) gravarCursor(colecao, ultimo); return recebidas; });
   }
 
-  var emAndamento = null, timer = null, ativa = false, ultimaSincronia = null, ultimaFalha = null;
+  var emAndamento = null, timer = null, ativa = false, ultimaSincronia = null, ultimaFalha = null, ultimaConsulta = null;
   var sincronia = {
     puxar: function () {
       if (emAndamento) return emAndamento;
@@ -365,7 +365,34 @@
     parar: function () { ativa = false; if (timer) clearInterval(timer); timer = null; },
     ultima: function () { return ultimaSincronia; },
     falha: function () { return ultimaFalha; },
-    rodando: function () { return !!emAndamento; }
+    rodando: function () { return !!emAndamento; },
+    consulta: function () { return ultimaConsulta; },
+
+    /**
+     * Baixa de novo, do começo, as coleções pedidas (ignora o marcador do aparelho).
+     * Usado pelo botão "Tentar de novo" quando o aparelho está sem checklists:
+     * devolve quantos registros o servidor mandou de cada coleção.
+     */
+    baixarTudo: function (colecoes) {
+      if (!auth.usuario()) return Promise.reject(Erro('Entre novamente para baixar os dados.'));
+      if (!online()) return Promise.reject(Erro('Sem conexão com o servidor. Verifique a internet e tente novamente.'));
+      var res = {};
+      return colecoes.reduce(function (cadeia, c) {
+        return cadeia.then(function () {
+          return puxarDesde(c, null).then(function (n) {
+            res[c] = n;
+            if (n) CKL.eventos.emitir(EVENTO[c], { origem: 'servidor' });
+          }, function (e) { if (COLECOES_OPCIONAIS.indexOf(c) < 0) throw e; });
+        });
+      }, Promise.resolve()).then(function () {
+        ultimaFalha = null;
+        ultimaConsulta = { em: util.agora(), recebidos: res };
+        return res;
+      }, function (e) {
+        ultimaFalha = { em: util.agora(), mensagem: (erroDoServidor(e, 'Falha ao baixar os dados do servidor.') || {}).message };
+        throw e && e.amigavel ? e : erroDoServidor(e);
+      });
+    }
   };
   global.addEventListener('online', function () { if (ativa) sincronia.ciclo(); });
   document.addEventListener('visibilitychange', function () { if (ativa && document.visibilityState === 'visible') sincronia.ciclo(); });
@@ -468,10 +495,11 @@
     /** Devolve { colecao: [documentos que existem aqui e não no servidor] } (só as coleções com falta). */
     conferir: function () {
       if (!auth.ehAdm() || !online()) return Promise.resolve({});
-      var faltam = {};
+      var faltam = {}, servidor = {}, aparelho = {};
       return CADASTROS.concat(['historico']).reduce(function (cadeia, c) {
         return cadeia.then(function () {
           return Promise.all([local[c].listar(), idsNoServidor(c)]).then(function (r) {
+            servidor[c] = Object.keys(r[1]).length; aparelho[c] = r[0].length;
             var lista = r[0].filter(function (d) {
               if (c === 'historico' && ENTIDADES_CADASTRO.indexOf(d.entidade) < 0) return false;
               return !r[1][chaveLocal(c, d)];
@@ -480,6 +508,7 @@
           }, function (e) { if (COLECOES_OPCIONAIS.indexOf(c) < 0) throw e; });
         });
       }, Promise.resolve()).then(function () {
+        cadastrosLocais.ultima = { em: util.agora(), servidor: servidor, aparelho: aparelho };
         // histórico sozinho (sem cadastro faltando) não justifica o aviso
         var cs = Object.keys(faltam);
         return cs.length === 1 && cs[0] === 'historico' ? {} : faltam;

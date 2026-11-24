@@ -14,12 +14,30 @@
    * Aviso "cadastros só neste computador": confere com o servidor e, se faltar algo
    * lá (modelos criados quando o sistema ainda não tinha servidor), oferece o envio.
    */
-  adm.avisoCadastrosLocais = function (alvo) {
+  adm.avisoCadastrosLocais = function (alvo, op) {
     const CL = CKL.nuvem && CKL.nuvem.ativa && CKL.nuvem.cadastrosLocais;
     if (!alvo || !CL) return;
+    op = op || {};
+    const deNovo = () => adm.avisoCadastrosLocais(alvo, op);
+    alvo.innerHTML = op.situacao ? String(html`<p class="texto-menor">Conferindo o servidor central…</p>`) : '';
     CL.conferir().then((faltam) => {
-      const resumo = CL.resumo(faltam);
-      if (!resumo || !alvo.isConnected) { alvo.innerHTML = ''; return; }
+      if (!alvo.isConnected) return;
+      const resumo = CL.resumo(faltam), u = CL.ultima, sv = (u && u.servidor) || {};
+      if (!resumo) {
+        if (u && !sv.modelos) {
+          // servidor sem nenhum checklist e nada para enviar daqui
+          alvo.innerHTML = String(html`
+            <div class="alerta alerta-erro">${icone('alerta', 20)}<div>
+              <strong>O servidor central não tem nenhum checklist de UBS ou secador.</strong>
+              <p>Por isso os celulares não mostram esses checklists. Rode o arquivo supabase/05_modelos_originais.sql no SQL Editor do Supabase
+                (carrega os 16 checklists originais) ou use "Carregar os checklists originais" abaixo, quando aparecer.</p>
+            </div></div>`);
+          return;
+        }
+        alvo.innerHTML = op.situacao && u ? String(html`<p class="texto-menor">${icone('nuvemOk', 14)} Servidor central conferido às ${util.fmtDataHora(u.em)}:
+          ${util.plural(sv.modelos || 0, 'checklist', 'checklists')} · ${util.plural(sv.cultivares || 0, 'cultivar', 'cultivares')} · ${util.plural(sv.motivos || 0, 'motivo', 'motivos')}.</p>`) : '';
+        return;
+      }
       alvo.innerHTML = String(html`
         <div class="alerta alerta-erro">${icone('alerta', 20)}<div>
           <strong>Há cadastros só neste computador: ${resumo}.</strong>
@@ -30,10 +48,20 @@
       alvo.querySelector('[data-acao-local="enviar"]').addEventListener('click', (ev) => {
         ui.ocupar(ev.currentTarget, () => CL.enviar(faltam)).then((n) => {
           ui.aviso(util.plural(n, 'registro enviado', 'registros enviados') + ' ao servidor. Os celulares recebem na próxima sincronização.', 'ok', 8000);
-          adm.avisoCadastrosLocais(alvo);
+          deNovo();
         }).catch(ui.erro);
       });
-    }).catch((e) => console.warn('[cadastros locais]', e && e.message));
+    }).catch((e) => {
+      console.warn('[cadastros locais]', e && e.message);
+      if (!alvo.isConnected) return;
+      alvo.innerHTML = String(html`
+        <div class="alerta alerta-alerta">${icone('alerta', 20)}<div>
+          <strong>Não foi possível conferir o servidor central.</strong>
+          <p>${(e && e.message) || ui.mensagemDe(e)}</p>
+          <button type="button" class="btn btn-secundario" data-acao-local="conferir">${icone('atualizar', 18)}<span>Tentar de novo</span></button>
+        </div></div>`);
+      alvo.querySelector('[data-acao-local="conferir"]').addEventListener('click', deNovo);
+    });
   };
 
   /** Linha do tempo de eventos de auditoria. */

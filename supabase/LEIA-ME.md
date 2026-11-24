@@ -12,6 +12,7 @@ sistema de Fotos TSI: banco, fotos e usuários de um não se misturam com os do 
 | `02_cultivares.sql` | Cadastro de cultivares (rodar depois do 01) |
 | `03_veiculos.sql` | Limpeza de veículos e motivos de autorização (rodar depois do 02) |
 | `04_documentos_veiculo.sql` | Cabeçalho editável das fichas de veículo (rodar depois do 03) |
+| `05_modelos_originais.sql` | Carrega no servidor os 16 checklists originais, só os que faltarem (não apaga nada; mostra um resumo no fim) |
 | `functions/ckl-usuarios/index.ts` | Função que cria usuários e redefine senhas a partir do painel |
 
 ## 1. Criar o projeto
@@ -96,6 +97,7 @@ Os checklists de teste feitos antes, sem servidor, ficam só no navegador onde f
 | Tela Cultivares diz que o servidor não tem o cadastro | Rode o `02_cultivares.sql` |
 | Registro de veículo fica "Falha no envio" ou a tela Motivos diz que o servidor não tem o cadastro | Rode o `03_veiculos.sql` |
 | Ao salvar o cabeçalho de uma ficha de veículo aparece "o servidor ainda não guarda o cabeçalho" | Rode o `04_documentos_veiculo.sql` |
+| Celulares sem os checklists de UBS e secador ("o servidor central não tem nenhum checklist") | Rode o `05_modelos_originais.sql` e toque em "Tentar de novo" no celular |
 | Fotos não sobem | O bucket `ckl-fotos` existe em Storage? (criado pelo passo 3) |
 | Painel continua dizendo "Dados neste aparelho" | `servidor.js` foi salvo com URL e chave? Recarregue com Ctrl+F5 |
 | Nada carrega e o painel do Supabase mostra o projeto "Paused" | No plano gratuito o projeto pausa após 7 dias sem uso. Clique em **Restore project**; os dados continuam lá |
