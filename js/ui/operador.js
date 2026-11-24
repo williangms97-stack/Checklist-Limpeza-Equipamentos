@@ -207,7 +207,7 @@
       /* ---------------- 3. Dados iniciais ---------------- */
       function telaAbrir() {
         topo('Informações iniciais', 'Novo checklist · passo 3 de 3', true);
-        return Promise.all([CKL.modelos.obter(estado.modeloId), CKL.execucoes.meus()]).then(([m, meus]) => {
+        return Promise.all([CKL.modelos.obter(estado.modeloId), CKL.execucoes.meus(), CKL.cultivares.opcoes()]).then(([m, meus, cultivares]) => {
           if (!m) { ir('lista'); return; }
           const aberto = meus.filter((e) => e.modeloId === m.id && e.status === ST.EM_ANDAMENTO)[0];
           elConteudo.innerHTML = html`
@@ -221,8 +221,8 @@
               <button type="button" class="btn btn-secundario" data-acao="continuar" data-exec="${aberto.id}">Continuar o checklist em andamento</button></div></div>` : ''}
             <form class="cartao formulario" id="form-inicio" novalidate>
               <span class="op-rotulo-g">Informações relevantes</span>
-              <div class="campo"><label for="ini-anterior">Cultivar anterior</label><input id="ini-anterior" autocomplete="off" maxlength="80" required></div>
-              <div class="campo"><label for="ini-proxima">Próxima cultivar</label><input id="ini-proxima" autocomplete="off" maxlength="80" required></div>
+              ${ui.campoCultivar('ini-anterior', 'Cultivar anterior', '', cultivares)}
+              ${ui.campoCultivar('ini-proxima', 'Próxima cultivar', '', cultivares)}
               <p class="campo-ajuda">Você pode completar esses campos depois, antes de enviar.</p>
             </form>
             <details class="cartao ck-orientacao"><summary>Orientação do checklist</summary>${(m.orientacao || []).map((o) => html`<p>${o}</p>`)}</details>`;
@@ -461,7 +461,7 @@
         if (b) { if (pend.length) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled'); }
       }
       function telaRevisao() {
-        return guardarTextos().then(carregarExec).then((e) => {
+        return guardarTextos().then(carregarExec).then((e) => (e ? CKL.cultivares.opcoes([e.cultivarAnterior, e.proximaCultivar]) : []).then((cultivares) => {
           if (!e) { ir('inicio'); return; }
           if (e.status !== ST.EM_ANDAMENTO) { ir('ver', { execId: e.id }); return; }
           topo('Revisar e enviar', e.nome + ' · ' + e.identificacao, true);
@@ -483,8 +483,8 @@
             <form class="cartao formulario" id="form-revisao" novalidate>
               <span class="op-rotulo-g">Informações relevantes</span>
               <div class="formulario-linha">
-                <div class="campo"><label for="rv-anterior">Cultivar anterior</label><input id="rv-anterior" maxlength="80" data-campo="cultivarAnterior" value="${e.cultivarAnterior || ''}"></div>
-                <div class="campo"><label for="rv-proxima">Próxima cultivar</label><input id="rv-proxima" maxlength="80" data-campo="proximaCultivar" value="${e.proximaCultivar || ''}"></div>
+                ${ui.campoCultivar('rv-anterior', 'Cultivar anterior', e.cultivarAnterior, cultivares, 'cultivarAnterior')}
+                ${ui.campoCultivar('rv-proxima', 'Próxima cultivar', e.proximaCultivar, cultivares, 'proximaCultivar')}
               </div>
               <div class="campo"><label for="rv-obs">${(m.rotuloObservacoes || 'Observações').replace(/:$/, '')} <span class="opcional">(opcional)</span></label>
                 <textarea id="rv-obs" rows="3" maxlength="${cfg.TEXTO_MAXIMO * 2}" data-campo="observacoes">${e.observacoes || ''}</textarea></div>
@@ -511,7 +511,7 @@
             aoMudar: (png) => CKL.execucoes.definirGerais(e.id, { assinatura: png }).then((x) => { exec = x; atualizarPendencias(); }).catch(ui.erro)
           });
           barra(html`<button type="button" class="btn btn-acento btn-g btn-cresce" data-acao="enviar" ${pend.length ? ui.bruto('aria-disabled="true"') : ''}>${icone('upload', 22)}<span>Enviar checklist</span></button>`);
-        });
+        }));
       }
       function enviar(botao) {
         guardarTextos().then(carregarExec).then((e) => {

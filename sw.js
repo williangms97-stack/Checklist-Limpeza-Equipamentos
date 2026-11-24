@@ -8,7 +8,7 @@
 
    Ao publicar uma nova versão, altere VERSAO (e CKL.config.VERSAO, mesmo número).
    ========================================================================== */
-const VERSAO = 'ckl-dois-marcos-1.0.2';
+const VERSAO = 'ckl-dois-marcos-1.1.0';
 
 const ARQUIVOS = [
   './',
@@ -25,10 +25,12 @@ const ARQUIVOS = [
   './js/core/db.js',
   './js/core/repositorio.js',
   './js/dados/modelos-originais.js',
+  './js/dados/cultivares-iniciais.js',
   './js/servicos/historico.js',
   './js/servicos/auth.js',
   './js/servicos/usuarios.js',
   './js/servicos/modelos.js',
+  './js/servicos/cultivares.js',
   './js/servicos/sincronizacao.js',
   './js/servicos/execucoes.js',
   './js/servicos/nao-conformidades.js',
@@ -49,6 +51,7 @@ const ARQUIVOS = [
   './js/ui/adm/checklists.js',
   './js/ui/adm/nc.js',
   './js/ui/adm/modelos.js',
+  './js/ui/adm/cultivares.js',
   './js/ui/adm/usuarios.js',
   './js/ui/adm/historico.js',
   './js/app.js',

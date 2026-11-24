@@ -105,7 +105,7 @@
     rotear: rotear,
     iniciar() {
       return CKL.repo.iniciar()
-        .then(() => Promise.all([CKL.usuarios.semear(), CKL.modelos.semear()]))
+        .then(() => Promise.all([CKL.usuarios.semear(), CKL.modelos.semear(), CKL.cultivares.semear()]))
         .then(() => CKL.auth.restaurar())
         .then(() => {
           rotear();

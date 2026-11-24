@@ -32,6 +32,10 @@
       // um item por checklist a enviar ao servidor (sempre o estado mais recente)
       criar('fila_sincronizacao', { keyPath: 'id' }, [['situacao', 'situacao'], ['execucaoId', 'execucaoId', { unique: true }]]);
     }
+    if (versaoAnterior < 2) {
+      // cadastro de cultivares (cultivar anterior / próxima cultivar)
+      criar('cultivares', { keyPath: 'id' }, [['nome', 'nome']]);
+    }
   }
 
   function abrir() {

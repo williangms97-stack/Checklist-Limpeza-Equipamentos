@@ -7,12 +7,12 @@
   var CKL = global.CKL = global.CKL || {};
 
   CKL.config = {
-    VERSAO: '1.0.2',
+    VERSAO: '1.1.0',
     NOME_SISTEMA: 'Checklist de Limpeza de Equipamentos',
     NOME_CURTO: 'Checklist de Limpeza',
     EMPRESA: 'Dois Marcos Sementes',
 
-    BANCO: { NOME: 'ckl-dois-marcos', VERSAO: 1 },
+    BANCO: { NOME: 'ckl-dois-marcos', VERSAO: 2 },
 
     PERFIS: { ADM: 'ADM', OPERADOR: 'OPERADOR' },
     ROTULO_PERFIL: { ADM: 'Administrador', OPERADOR: 'Operador' },

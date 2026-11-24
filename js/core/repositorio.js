@@ -13,7 +13,7 @@
      repo.lote([{ colecao, tipo: 'salvar'|'inserir'|'remover', valor|chave }])  -> tudo ou nada
 
    COLEÇÕES: usuarios, modelos, modelosVersoes, execucoes, fotos,
-             naoConformidades, historico, filaSincronizacao
+             naoConformidades, historico, filaSincronizacao, cultivares
    ========================================================================== */
 (function (global) {
   'use strict';
@@ -29,7 +29,8 @@
     fotos: 'fotos',
     naoConformidades: 'nao_conformidades',
     historico: 'historico',
-    filaSincronizacao: 'fila_sincronizacao'
+    filaSincronizacao: 'fila_sincronizacao',
+    cultivares: 'cultivares'
   };
 
   function colecao(nome) {

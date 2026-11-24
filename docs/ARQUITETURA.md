@@ -38,6 +38,7 @@ repo.loteLocal(ops)  -> sempre no aparelho; usado no preenchimento (o envio é p
 | `historico` | `id` | Eventos de auditoria (nunca alterados) |
 | `filaSincronizacao` | `id` (único por execução) | O que falta enviar ao servidor |
 | `usuarios` | `id` | Só no modo demonstrativo (sem servidor) |
+| `cultivares` | `id` | Cadastro de cultivares: `nome`, `ativa`, quem criou/alterou (banco local versão 2; servidor `ckl_cultivares`, `supabase/02_cultivares.sql`) |
 
 ## Onde está cada regra
 

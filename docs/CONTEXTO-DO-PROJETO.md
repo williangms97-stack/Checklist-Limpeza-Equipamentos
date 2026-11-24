@@ -25,7 +25,11 @@ Decisões validadas com o usuário em 23/11/2026 (detalhes em `ANALISE-DOS-CHECK
   Obrigatório — "O que", "Quem" e "Data prevista" — enquanto o equipamento não for liberado na
   reavaliação; opcional se foi liberado. ("Como?" sempre opcional.)
 - **Fotos** sempre opcionais, ligadas ao item (câmera ou galeria).
-- **Cultivar anterior e próxima cultivar** obrigatórias para enviar.
+- **Cultivar anterior e próxima cultivar** obrigatórias para enviar, escolhidas na lista do **cadastro
+  de cultivares** (painel → Cultivares; só o administrador inclui, renomeia, ativa e desativa, com
+  histórico). O checklist guarda o nome escolhido: renomear ou desativar depois não muda o que já
+  foi feito. Lista inicial (66 cultivares, texto exato recebido em 24/11/2026):
+  `js/dados/cultivares-iniciais.js`. Sem nenhuma cultivar cadastrada, o campo vira texto livre.
 - **Termo de conclusão** (Liberada / Não Liberada) só nas UBS, obrigatório. "Liberada" fica
   bloqueada se algum equipamento terminou NC.
 - **Assinaturas:** quem entra no aplicativo é o responsável pela vistoria (equipe de controle de

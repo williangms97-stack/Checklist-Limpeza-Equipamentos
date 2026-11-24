@@ -233,6 +233,7 @@ language sql immutable as $$
     when 'fotos' then 'ckl_fotos'
     when 'naoConformidades' then 'ckl_nao_conformidades'
     when 'historico' then 'ckl_historico'
+    when 'cultivares' then 'ckl_cultivares'   -- tabela criada no 02_cultivares.sql
   end;
 $$;
 

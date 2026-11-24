@@ -27,7 +27,8 @@
     execucao: 'Checklist',
     modelo: 'Modelo de checklist',
     nc: 'Não conformidade',
-    usuario: 'Usuário'
+    usuario: 'Usuário',
+    cultivar: 'Cultivar'
   };
 
   function texto(v) {

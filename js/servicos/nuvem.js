@@ -170,11 +170,12 @@
   usuarios.semear = function () { return Promise.resolve(); };
   usuarios.acessosIniciaisAtivos = function () { return Promise.resolve([]); };
   CKL.modelos.semear = function () { return Promise.resolve(false); };   // modelos vêm do servidor
+  CKL.cultivares.semear = function () { return Promise.resolve(false); };   // cultivares vêm do servidor
 
   /* ======================================================================
      Repositório: leitura no aparelho, gravação do ADM no servidor
      ====================================================================== */
-  var ORDEM_ENVIO = { modelos: 0, modelosVersoes: 1, execucoes: 1, naoConformidades: 2, fotos: 2, historico: 3 };
+  var ORDEM_ENVIO = { modelos: 0, cultivares: 0, modelosVersoes: 1, execucoes: 1, naoConformidades: 2, fotos: 2, historico: 3 };
 
   function paraServidor(op) {
     var o = { colecao: op.colecao, tipo: op.tipo };
@@ -241,10 +242,10 @@
   /* ======================================================================
      Sincronização (baixar novidades)
      ====================================================================== */
-  var COLECOES_TODOS = ['modelos', 'execucoes', 'fotos', 'naoConformidades'];
+  var COLECOES_TODOS = ['modelos', 'execucoes', 'fotos', 'naoConformidades', 'cultivares'];
   var COLECOES_ADM = ['modelosVersoes', 'historico'];
   var EVENTO = { modelos: 'modelos:alterado', modelosVersoes: 'modelos:alterado', execucoes: 'execucoes:alterado', fotos: 'execucoes:alterado',
-    naoConformidades: 'nc:alterado', historico: 'execucoes:alterado' };
+    naoConformidades: 'nc:alterado', historico: 'execucoes:alterado', cultivares: 'cultivares:alterado' };
 
   function chaveCursor(colecao) { return 'ckl.cursor.' + (auth.ehAdm() ? 'ADM' : 'OP') + '.' + colecao; }
   function lerCursor(c) { try { return JSON.parse(global.localStorage.getItem(chaveCursor(c)) || 'null'); } catch (e) { return null; } }
@@ -306,7 +307,13 @@
       var colecoes = COLECOES_TODOS.concat(auth.ehAdm() ? COLECOES_ADM : []);
       var avisar = {};
       emAndamento = colecoes.reduce(function (cadeia, c) {
-        return cadeia.then(function () { return puxarColecao(c).then(function (n) { if (n) avisar[EVENTO[c]] = true; }); });
+        return cadeia.then(function () {
+          return puxarColecao(c).then(function (n) { if (n) avisar[EVENTO[c]] = true; }, function (e) {
+            // cultivares: servidor ainda sem supabase/02_cultivares.sql não pode parar o resto da sincronia
+            if (c === 'cultivares') { console.warn('[sincronia] cultivares:', e && e.message); return; }
+            throw e;
+          });
+        });
       }, Promise.resolve()).then(function () {
         ultimaSincronia = util.agora();
         Object.keys(avisar).forEach(function (ev) { CKL.eventos.emitir(ev, { origem: 'servidor' }); });

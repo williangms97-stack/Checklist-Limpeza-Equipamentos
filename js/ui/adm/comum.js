@@ -184,6 +184,9 @@
 
   /** Correção do checklist pelo administrador (motivo obrigatório; tudo vai para o histórico). */
   function abrirCorrecao(e, aoSalvar) {
+    return CKL.cultivares.opcoes([e.cultivarAnterior, e.proximaCultivar]).then((cultivares) => formularioCorrecao(e, cultivares, aoSalvar)).catch(ui.erro);
+  }
+  function formularioCorrecao(e, cultivares, aoSalvar) {
     const opcoes = cfg.AVALIACOES.map((a) => ({ valor: a, rotulo: cfg.ROTULO_AVALIACAO[a] }));
     const m = ui.modal({
       titulo: 'Corrigir checklist: ' + e.nome, largura: 'g',
@@ -192,8 +195,8 @@
           <p class="texto-menor">Altere só o que precisa ser corrigido. Cada campo alterado fica no histórico com o valor anterior, o novo, quem corrigiu e o motivo.
           Se um item deixar de ser NC, a não conformidade dele é encerrada automaticamente com o motivo da correção; se passar a NC, uma nova é aberta.</p>
           <div class="formulario-linha">
-            <div class="campo"><label for="co-ant">Cultivar anterior</label><input id="co-ant" value="${e.cultivarAnterior || ''}" maxlength="80"></div>
-            <div class="campo"><label for="co-prox">Próxima cultivar</label><input id="co-prox" value="${e.proximaCultivar || ''}" maxlength="80"></div>
+            ${ui.campoCultivar('co-ant', 'Cultivar anterior', e.cultivarAnterior, cultivares)}
+            ${ui.campoCultivar('co-prox', 'Próxima cultivar', e.proximaCultivar, cultivares)}
             <div class="campo"><label for="co-oper">Operador do ponto</label><input id="co-oper" value="${(e.operadorLocal && e.operadorLocal.nome) || ''}" maxlength="120"></div>
             ${e.modelo.temTermo ? html`<div class="campo"><label for="co-termo">Termo de conclusão</label><select id="co-termo">${ui.opcoes([{ valor: 'liberada', rotulo: 'Liberada' }, { valor: 'nao_liberada', rotulo: 'Não Liberada' }], e.termo)}</select></div>` : ''}
           </div>
