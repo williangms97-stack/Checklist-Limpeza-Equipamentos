@@ -52,11 +52,20 @@
     if (/permission denied|JWT|not authorized|row-level security/i.test(m)) return Erro('Sem permissão no servidor. Entre novamente.');
     return Erro(m || padrao || 'O servidor recusou a operação.');
   }
+  var TEMPO_LIMITE_MS = 45 * 1000;
+  /* chamada presa (internet ruim, servidor instável) não pode travar a sincronia para sempre */
+  function comTempoLimite(promessa, ms) {
+    var t;
+    var limite = new Promise(function (_, rejeitar) {
+      t = setTimeout(function () { rejeitar(Erro('O servidor demorou para responder. Tente de novo em instantes.')); }, ms || TEMPO_LIMITE_MS);
+    });
+    return Promise.race([promessa, limite]).then(function (v) { clearTimeout(t); return v; }, function (e) { clearTimeout(t); throw e; });
+  }
   function rpc(nome, p) {
-    return sb.rpc(nome, { p: p || {} }).then(function (r) {
+    return comTempoLimite(sb.rpc(nome, { p: p || {} })).then(function (r) {
       if (r.error) throw erroDoServidor(r.error);
       return r.data;
-    }, function (e) { throw erroDoServidor(e); });
+    }, function (e) { throw e && e.amigavel ? e : erroDoServidor(e); });
   }
 
   function lerPerfil() { try { return JSON.parse(global.localStorage.getItem(CHAVE_PERFIL) || 'null'); } catch (e) { return null; } }
@@ -377,7 +386,7 @@
         return cadeia.then(function () {
           var caminho = f.caminho || ('execucoes/' + exec.id + '/' + f.id + '.jpg');
           var envio = f.dados && !f.caminho
-            ? sb.storage.from(S.BUCKET_FOTOS).upload(caminho, f.dados, { upsert: true, contentType: f.tipo || 'image/jpeg' })
+            ? comTempoLimite(sb.storage.from(S.BUCKET_FOTOS).upload(caminho, f.dados, { upsert: true, contentType: f.tipo || 'image/jpeg' }), 120000)
             : Promise.resolve({});
           return envio.then(function (r) {
             if (r && r.error) throw erroDoServidor(r.error, 'Falha ao enviar a fotografia.');
@@ -405,7 +414,7 @@
         return cadeia.then(function () {
           var caminho = f.caminho || ('execucoes/' + v.id + '/' + f.id + '.jpg');
           var envio = f.dados && !f.caminho
-            ? sb.storage.from(S.BUCKET_FOTOS).upload(caminho, f.dados, { upsert: true, contentType: f.tipo || 'image/jpeg' })
+            ? comTempoLimite(sb.storage.from(S.BUCKET_FOTOS).upload(caminho, f.dados, { upsert: true, contentType: f.tipo || 'image/jpeg' }), 120000)
             : Promise.resolve({});
           return envio.then(function (r) {
             if (r && r.error) throw erroDoServidor(r.error, 'Falha ao enviar a fotografia.');
