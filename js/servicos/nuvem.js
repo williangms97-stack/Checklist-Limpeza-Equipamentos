@@ -283,7 +283,11 @@
   }
 
   function puxarColecao(colecao) {
-    var cursor = lerCursor(colecao);
+    // aparelho sem nada guardado desta coleção: baixa tudo de novo, mesmo que haja marcador antigo
+    return local[colecao].contar().catch(function () { return 1; }).then(function (n) { return puxarDesde(colecao, n ? lerCursor(colecao) : null); });
+  }
+
+  function puxarDesde(colecao, cursor) {
     var desde = cursor ? new Date(new Date(cursor.desde).getTime() - SOBREPOSICAO_MS).toISOString() : null;
     var depoisId = '', recebidas = 0, ultimo = cursor;
     function pagina() {
@@ -303,16 +307,19 @@
     return pagina().then(function () { if (ultimo) gravarCursor(colecao, ultimo); return recebidas; });
   }
 
-  var emAndamento = null, timer = null, ativa = false, ultimaSincronia = null;
+  var emAndamento = null, timer = null, ativa = false, ultimaSincronia = null, ultimaFalha = null;
   var sincronia = {
     puxar: function () {
       if (emAndamento) return emAndamento;
       if (!auth.usuario() || !online()) return Promise.resolve({ ok: false });
       var colecoes = COLECOES_TODOS.concat(auth.ehAdm() ? COLECOES_ADM : []);
-      var avisar = {};
+      var avisados = {};
       emAndamento = colecoes.reduce(function (cadeia, c) {
         return cadeia.then(function () {
-          return puxarColecao(c).then(function (n) { if (n) avisar[EVENTO[c]] = true; }, function (e) {
+          return puxarColecao(c).then(function (n) {
+            // avisa as telas logo que a coleção chega (uma falha depois não esconde o que já foi baixado)
+            if (n && !avisados[EVENTO[c]]) { avisados[EVENTO[c]] = true; CKL.eventos.emitir(EVENTO[c], { origem: 'servidor' }); }
+          }, function (e) {
             // servidor ainda sem os SQL 02/03 não pode parar o resto da sincronia
             if (COLECOES_OPCIONAIS.indexOf(c) >= 0) { console.warn('[sincronia] ' + c + ':', e && e.message); return; }
             throw e;
@@ -320,15 +327,18 @@
         });
       }, Promise.resolve()).then(function () {
         ultimaSincronia = util.agora();
-        Object.keys(avisar).forEach(function (ev) { CKL.eventos.emitir(ev, { origem: 'servidor' }); });
+        ultimaFalha = null;
+        emAndamento = null;
         CKL.eventos.emitir('sincronia:concluida', { quando: ultimaSincronia });
         return { ok: true };
       }).then(function (r) { emAndamento = null; return r; }, function (e) {
         emAndamento = null;
         console.warn('[sincronia]', e && e.message);
-        CKL.eventos.emitir('sincronia:falha', { mensagem: e && e.message });
+        ultimaFalha = { em: util.agora(), mensagem: (erroDoServidor(e, 'Falha ao baixar os dados do servidor.') || {}).message };
+        CKL.eventos.emitir('sincronia:falha', { mensagem: ultimaFalha.mensagem });
         return { ok: false, erro: e };
       });
+      CKL.eventos.emitir('sincronia:inicio');
       return emAndamento;
     },
     ciclo: function () {
@@ -344,7 +354,9 @@
       timer = setInterval(function () { if (document.visibilityState !== 'hidden') sincronia.ciclo(); }, Math.max(15, S.INTERVALO_SINCRONIA || 60) * 1000);
     },
     parar: function () { ativa = false; if (timer) clearInterval(timer); timer = null; },
-    ultima: function () { return ultimaSincronia; }
+    ultima: function () { return ultimaSincronia; },
+    falha: function () { return ultimaFalha; },
+    rodando: function () { return !!emAndamento; }
   };
   global.addEventListener('online', function () { if (ativa) sincronia.ciclo(); });
   document.addEventListener('visibilitychange', function () { if (ativa && document.visibilityState === 'visible') sincronia.ciclo(); });

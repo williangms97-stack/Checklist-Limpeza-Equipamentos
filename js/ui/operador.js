@@ -120,6 +120,17 @@
         }).catch(ui.erro);
       }
 
+      /* Sem modelos no aparelho: diz se está baixando ou qual foi o erro, com "Tentar de novo". */
+      function avisoSemModelos() {
+        const sinc = CKL.nuvem && CKL.nuvem.ativa ? CKL.nuvem.sincronia : null;
+        if (!sinc) return html`<div class="alerta alerta-alerta" data-sem-modelos="1">${icone('alerta', 20)}<div><strong>Checklists de UBS e secador indisponíveis.</strong><p>Os modelos ainda não foram carregados.</p></div></div>`;
+        if (sinc.rodando()) return html`<div class="alerta alerta-info" data-sem-modelos="1">${icone('atualizar', 20)}<div><strong>Baixando os checklists do servidor…</strong><p>Na primeira vez pode levar alguns segundos.</p></div></div>`;
+        const f = sinc.falha();
+        return html`<div class="alerta alerta-alerta" data-sem-modelos="1">${icone('alerta', 20)}<div><strong>Checklists de UBS e secador indisponíveis.</strong>
+          <p>${f ? 'Não foi possível baixar do servidor: ' + f.mensagem : 'Os modelos ainda não foram baixados do servidor. Confira a internet ou peça ao administrador para carregar os checklists no painel.'}</p>
+          <button type="button" class="btn btn-secundario" data-acao="baixar-modelos">${icone('atualizar', 18)}<span>Tentar de novo</span></button></div></div>`;
+      }
+
       /* ---------------- Início ---------------- */
       function telaInicio() {
         exec = null;
@@ -154,7 +165,7 @@
                 </button>
               </div>
             </section>
-            ${!modelos.length ? html`<div class="alerta alerta-alerta">${icone('alerta', 20)}<div><strong>Checklists de UBS e secador indisponíveis.</strong><p>${CKL.nuvem && CKL.nuvem.ativa ? 'Os modelos ainda não foram baixados do servidor. Conecte-se à internet ou peça ao administrador para carregar os checklists no painel.' : 'Os modelos ainda não foram carregados.'}</p></div></div>` : ''}
+            ${!modelos.length ? avisoSemModelos() : ''}
             ${andamento.length || veiAndamento.length ? html`
               <section class="op-secao">
                 <div class="op-secao-topo"><h2>Em andamento</h2></div>
@@ -632,6 +643,9 @@
         else if (a === 'menu') abrirMenu();
         else if (a === 'novo') ir('inicio');
         else if (a === 'veiculos') ir('veiculos');
+        else if (a === 'baixar-modelos') {
+          ui.ocupar(b, () => CKL.nuvem.sincronia.ciclo()).then(() => desenhar()).catch(ui.erro);
+        }
         else if (a.indexOf('vei-') === 0) vei.aoClicar(b, a);
         else if (a === 'area') ir('lista', { area: b.dataset.area });
         else if (a === 'modelo') ir('abrir', { modeloId: b.dataset.modelo });
@@ -700,7 +714,11 @@
         CKL.eventos.ouvir('conexao:alterada', aoConexao),
         CKL.eventos.ouvir('execucoes:alterado', aoMudarDados),
         CKL.eventos.ouvir('veiculos:alterado', aoMudarDados),
-        CKL.eventos.ouvir('modelos:alterado', () => { if (montado && ['inicio', 'area', 'lista'].indexOf(estado.tela) >= 0) desenhar(); })
+        CKL.eventos.ouvir('modelos:alterado', () => { if (montado && ['inicio', 'area', 'lista'].indexOf(estado.tela) >= 0) desenhar(); }),
+        // início sem modelos: mostra "baixando…", o erro ou os checklists que chegaram
+        ...['sincronia:inicio', 'sincronia:falha', 'sincronia:concluida'].map((ev) => CKL.eventos.ouvir(ev, () => {
+          if (montado && estado.tela === 'inicio' && elConteudo.querySelector('[data-sem-modelos]')) desenhar();
+        }))
       ];
       const antesDeSair = () => { guardarTextos(); vei.guardar(); };
       global.addEventListener('pagehide', antesDeSair);
