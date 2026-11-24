@@ -7,7 +7,7 @@
   var CKL = global.CKL = global.CKL || {};
 
   CKL.config = {
-    VERSAO: '1.3.2',
+    VERSAO: '1.3.3',
     NOME_SISTEMA: 'Checklist de Limpeza de Equipamentos',
     NOME_CURTO: 'Checklist de Limpeza',
     EMPRESA: 'Dois Marcos Sementes',

@@ -25,6 +25,7 @@
             <div class="ck-progresso" id="op-progresso" hidden><span id="op-progresso-barra"></span></div>
           </header>
           <main class="op-conteudo" id="op-conteudo" tabindex="-1"></main>
+          <p class="op-versao">${cfg.NOME_CURTO} · Versão ${cfg.VERSAO}</p>
           <footer class="op-barra" id="op-barra" hidden></footer>
         </div>`;
       const elTopo = raiz.querySelector('#op-topo'), elConteudo = raiz.querySelector('#op-conteudo'), elBarra = raiz.querySelector('#op-barra');

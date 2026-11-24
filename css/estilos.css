@@ -611,6 +611,7 @@ s { color: var(--tinta-3); }
   padding-left: var(--lado-e); padding-right: var(--lado-d);
 }
 .op-barra-interna { display: flex; gap: 10px; }
+.op-versao { margin: 0; padding: 4px var(--lado-d) 14px var(--lado-e); text-align: center; font-size: 12px; color: var(--tinta-3, #6b7280); }
 
 .op .cartao { display: flex; flex-direction: column; gap: 12px; }
 .op-rotulo-g { display: block; font: 600 20px/1.2 var(--fonte-titulo); letter-spacing: 0.01em; color: var(--tinta); }

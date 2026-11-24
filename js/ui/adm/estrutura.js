@@ -74,7 +74,7 @@
               <button type="button" class="adm-menu-botao" data-acao="app-operador">${icone('celular', 20)}<span><strong>Aplicativo do celular</strong><small>Fazer um checklist</small></span></button>
               <div class="adm-usuario">
                 <span class="avatar">${util.iniciais(usuario.nome)}</span>
-                <span class="adm-usuario-nome"><strong>${usuario.nome}</strong><small>${cfg.ROTULO_PERFIL[usuario.perfil]}</small></span>
+                <span class="adm-usuario-nome"><strong>${usuario.nome}</strong><small>${cfg.ROTULO_PERFIL[usuario.perfil]} · Versão ${cfg.VERSAO}</small></span>
                 <button type="button" class="btn-icone" data-acao="sair" aria-label="Sair do sistema" title="Sair">${icone('sair', 20)}</button>
               </div>
             </div>
