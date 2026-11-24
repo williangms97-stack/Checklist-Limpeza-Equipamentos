@@ -52,7 +52,9 @@ por veículo, preenchido numa tela só (`js/dados/formularios-veiculos.js`, text
   autorização**) e **assinatura obrigatória** de quem está logado.
 - **Placa:** aceita ABC-1234 e ABC1D23; fora disso avisa ("placa a conferir"), sem bloquear.
 - Fotos opcionais. Rascunho fica só no aparelho (pode ser descartado); enviado, só o administrador
-  corrige (motivo obrigatório, histórico). Sem versão nem data de aprovação (os documentos não têm).
+  corrige (motivo obrigatório, histórico). O cabeçalho (identificação, versão, página, elaborado/revisado/aprovado
+  por, data de aprovação) é editado pelo administrador em Modelos de checklist → Limpeza de veículo, com
+  motivo e histórico; versão e data só aparecem quando preenchidas. Cada registro guarda o cabeçalho do dia.
 - **Painel → Limpeza de veículos:** filtros, indicadores, PDF de cada registro, PDF do período no
   formato da planilha (folha deitada) e Excel.
 

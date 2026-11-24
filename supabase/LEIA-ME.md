@@ -11,6 +11,7 @@ sistema de Fotos TSI: banco, fotos e usuários de um não se misturam com os do 
 | `01_estrutura.sql` | Tabelas, regras de acesso, funções e o local das fotografias |
 | `02_cultivares.sql` | Cadastro de cultivares (rodar depois do 01) |
 | `03_veiculos.sql` | Limpeza de veículos e motivos de autorização (rodar depois do 02) |
+| `04_documentos_veiculo.sql` | Cabeçalho editável das fichas de veículo (rodar depois do 03) |
 | `functions/ckl-usuarios/index.ts` | Função que cria usuários e redefine senhas a partir do painel |
 
 ## 1. Criar o projeto
@@ -32,7 +33,7 @@ Assim ninguém cria conta sozinho: os usuários só são criados pelo painel do 
 ## 3. Criar as tabelas
 
 **SQL Editor** → **New query** → cole o conteúdo inteiro de `01_estrutura.sql` → **Run**. Depois, numa
-query nova, faça o mesmo com `02_cultivares.sql` e depois com `03_veiculos.sql`. Antes de rodar, confira a primeira linha: o
+query nova, faça o mesmo com `02_cultivares.sql`, depois com `03_veiculos.sql` e depois com `04_documentos_veiculo.sql`. Antes de rodar, confira a primeira linha: o
 título tem de ser o do Checklist de Limpeza (nunca rode aqui o SQL de outro sistema).
 
 Deve terminar com "Success. No rows returned". Pode ser executado de novo sem perder dados.
@@ -94,6 +95,7 @@ Os checklists de teste feitos antes, sem servidor, ficam só no navegador onde f
 | "Não foi possível falar com a função ckl-usuarios" | A função foi publicada com esse nome? Veja Edge Functions → ckl-usuarios → Logs |
 | Tela Cultivares diz que o servidor não tem o cadastro | Rode o `02_cultivares.sql` |
 | Registro de veículo fica "Falha no envio" ou a tela Motivos diz que o servidor não tem o cadastro | Rode o `03_veiculos.sql` |
+| Ao salvar o cabeçalho de uma ficha de veículo aparece "o servidor ainda não guarda o cabeçalho" | Rode o `04_documentos_veiculo.sql` |
 | Fotos não sobem | O bucket `ckl-fotos` existe em Storage? (criado pelo passo 3) |
 | Painel continua dizendo "Dados neste aparelho" | `servidor.js` foi salvo com URL e chave? Recarregue com Ctrl+F5 |
 | Nada carrega e o painel do Supabase mostra o projeto "Paused" | No plano gratuito o projeto pausa após 7 dias sem uso. Clique em **Restore project**; os dados continuam lá |

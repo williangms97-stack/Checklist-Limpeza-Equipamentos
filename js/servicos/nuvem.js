@@ -176,7 +176,7 @@
   /* ======================================================================
      Repositório: leitura no aparelho, gravação do ADM no servidor
      ====================================================================== */
-  var ORDEM_ENVIO = { modelos: 0, cultivares: 0, motivos: 0, modelosVersoes: 1, execucoes: 1, veiculos: 1, naoConformidades: 2, fotos: 2, historico: 3 };
+  var ORDEM_ENVIO = { modelos: 0, cultivares: 0, motivos: 0, documentosVeiculo: 0, modelosVersoes: 1, execucoes: 1, veiculos: 1, naoConformidades: 2, fotos: 2, historico: 3 };
 
   function paraServidor(op) {
     var o = { colecao: op.colecao, tipo: op.tipo };
@@ -243,12 +243,13 @@
   /* ======================================================================
      Sincronização (baixar novidades)
      ====================================================================== */
-  var COLECOES_TODOS = ['modelos', 'execucoes', 'fotos', 'naoConformidades', 'cultivares', 'veiculos', 'motivos'];
+  var COLECOES_TODOS = ['modelos', 'execucoes', 'fotos', 'naoConformidades', 'cultivares', 'veiculos', 'motivos', 'documentosVeiculo'];
   // coleções criadas por SQL posterior ao 01: se o servidor ainda não tem, o resto da sincronia continua
-  var COLECOES_OPCIONAIS = ['cultivares', 'veiculos', 'motivos'];
+  var COLECOES_OPCIONAIS = ['cultivares', 'veiculos', 'motivos', 'documentosVeiculo'];
   var COLECOES_ADM = ['modelosVersoes', 'historico'];
   var EVENTO = { modelos: 'modelos:alterado', modelosVersoes: 'modelos:alterado', execucoes: 'execucoes:alterado', fotos: 'execucoes:alterado',
-    naoConformidades: 'nc:alterado', historico: 'execucoes:alterado', cultivares: 'cultivares:alterado', veiculos: 'veiculos:alterado', motivos: 'motivos:alterado' };
+    naoConformidades: 'nc:alterado', historico: 'execucoes:alterado', cultivares: 'cultivares:alterado', veiculos: 'veiculos:alterado', motivos: 'motivos:alterado',
+    documentosVeiculo: 'documentosVeiculo:alterado' };
 
   function chaveCursor(colecao) { return 'ckl.cursor.' + (auth.ehAdm() ? 'ADM' : 'OP') + '.' + colecao; }
   function lerCursor(c) { try { return JSON.parse(global.localStorage.getItem(chaveCursor(c)) || 'null'); } catch (e) { return null; } }

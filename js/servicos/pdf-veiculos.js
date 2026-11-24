@@ -19,7 +19,12 @@
 
   /** Cabeçalho do documento original (logo, título e quadro de identificação). */
   function cabecalho(doc, d, subtitulo) {
-    var b = B(), t = b.t, COR = b.COR, md = medidas(doc), h = 30, y = M, caixa = 58;
+    var linhas = [['Identificação:', d.identificacao]];
+    if (d.versaoDocumento) linhas.push(['Versão:', d.versaoDocumento]);
+    linhas.push(['Página:', d.pagina], ['Elaborado por:', d.elaboradoPor], ['Revisado por:', d.revisadoPor], ['Aprovado por:', d.aprovadoPor]);
+    if (d.aprovadoEm) linhas.push(['Aprovado em:', util.fmtData(d.aprovadoEm)]);
+    var b = B(), t = b.t, COR = b.COR, md = medidas(doc), h = linhas.length > 5 ? 34 : 30, y = M, caixa = 58;
+    var passo = linhas.length > 5 ? (h - 7) / (linhas.length - 1) : 5.2;
     b.cor(doc, 'linha', COR.linha); doc.setLineWidth(0.3);
     doc.rect(M, y, md.U, h);
     var lw = 38, lh = lw * CKL.recursos.logoAltura / CKL.recursos.logoLargura;
@@ -32,12 +37,11 @@
     b.fonte(doc, true, 12.5); b.cor(doc, 'texto', COR.tinta);
     doc.text(doc.splitTextToSize(t(d.titulo), md.U - 44 - caixa - 6), cx, y + 16, { align: 'center' });
     if (subtitulo) { b.fonte(doc, false, 8.5); b.cor(doc, 'texto', COR.tinta3); doc.text(t(subtitulo), cx, y + h - 3.5, { align: 'center' }); }
-    var linhas = [['Identificação:', d.identificacao], ['Página:', d.pagina], ['Elaborado por:', d.elaboradoPor], ['Revisado por:', d.revisadoPor], ['Aprovado por:', d.aprovadoPor]];
     var x0 = md.L - M - caixa + 2.5, yy = y + 5.5;
     linhas.forEach(function (l) {
       b.fonte(doc, true, 7.8); b.cor(doc, 'texto', COR.tinta2); doc.text(t(l[0]), x0, yy);
       b.fonte(doc, false, 7.8); b.cor(doc, 'texto', COR.tinta); doc.text(t(l[1] || '—'), x0 + 21, yy);
-      yy += 5.2;
+      yy += passo;
     });
     return y + h + 5;
   }

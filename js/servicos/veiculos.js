@@ -174,8 +174,10 @@
       var agora = util.agora(), doc = copia(F()[tipo]);
       var v = {
         id: util.uuid(), tipo: tipo, protocolo: novoProtocolo(tipo),
+        // cópia do cabeçalho vigente: mudanças posteriores no painel não alteram este registro
         documento: { titulo: doc.titulo, identificacao: doc.identificacao, cabecalho: doc.cabecalho, pagina: doc.pagina,
-          elaboradoPor: doc.elaboradoPor, revisadoPor: doc.revisadoPor, aprovadoPor: doc.aprovadoPor },
+          versaoDocumento: doc.versaoDocumento || '', elaboradoPor: doc.elaboradoPor, revisadoPor: doc.revisadoPor,
+          aprovadoPor: doc.aprovadoPor, aprovadoEm: doc.aprovadoEm || '' },
         dataHora: agora, dataRegistro: util.dataLocal(), alteradoEm: agora, concluidoEm: null,
         responsavelId: u.id, responsavelNome: u.nome, responsavelUsuario: u.usuario,
         status: ST.EM_ANDAMENTO,

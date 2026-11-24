@@ -42,6 +42,10 @@
       // motivos padrão da autorização sem vistoria
       criar('motivos', { keyPath: 'id' }, [['nome', 'nome']]);
     }
+    if (versaoAnterior < 4) {
+      // cabeçalho das fichas de veículo editado pelo administrador ('conferencia' / 'autorizacao')
+      criar('documentos_veiculo', { keyPath: 'id' });
+    }
   }
 
   function abrir() {

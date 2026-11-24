@@ -59,7 +59,9 @@
         <div class="cartao ck-doc">
           <span class="ck-doc-cabecalho">${d.cabecalho}</span>
           <h2>${d.titulo}</h2>
-          ${ui.dados([['Identificação', d.identificacao], ['Página', d.pagina], ['Elaborado por', d.elaboradoPor], ['Revisado por', d.revisadoPor], ['Aprovado por', d.aprovadoPor]], 'dados-2col')}
+          ${ui.dados([['Identificação', d.identificacao]].concat(d.versaoDocumento ? [['Versão', d.versaoDocumento]] : [],
+            [['Página', d.pagina], ['Elaborado por', d.elaboradoPor], ['Revisado por', d.revisadoPor], ['Aprovado por', d.aprovadoPor]],
+            d.aprovadoEm ? [['Aprovado em', util.fmtData(d.aprovadoEm)]] : []), 'dados-2col')}
         </div>`;
     }
 

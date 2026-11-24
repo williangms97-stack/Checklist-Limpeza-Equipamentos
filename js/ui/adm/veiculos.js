@@ -90,7 +90,7 @@
         m.definirConteudo(html`
           <div class="selos">${ui.seloStatus(v.status)}${ui.seloEnvio(v.situacaoEnvio)}${v.placaConferir ? ui.seloSimples('Placa a conferir', 'selo-pendente', 'alerta') : ''}</div>
           ${alertas.length ? html`<div class="alerta alerta-erro">${icone('alerta', 20)}<div><strong>Resposta NÃO</strong><ul class="vei-alertas">${alertas.map((a) => html`<li>${a}</li>`)}</ul></div></div>` : ''}
-          <p class="texto-menor">${f.titulo} · ${f.identificacao}</p>
+          <p class="texto-menor">${f.titulo} · ${(v.documento || f).identificacao}${(v.documento || {}).versaoDocumento ? ' · versão ' + v.documento.versaoDocumento : ''}</p>
           ${ui.dados(pares, 'dados-2col')}
           ${v.tipo === 'autorizacao' && v.assinatura ? html`<div class="campo"><span class="ck-rotulo">${R.assinatura} (${v.responsavelNome}, ${util.fmtDataHora(v.assinatura.em)})</span><img class="ck-assinatura-img" src="${v.assinatura.imagem}" alt="Assinatura"></div>` : ''}
           ${usadas.length ? html`<h3 class="secao-titulo">Fotografias</h3><div class="ck-fotos-lista">${usadas.map((g) => html`<a href="${urls.daFoto(g) || g.miniatura}" target="_blank" rel="noopener" class="ck-mini"><img src="${g.miniatura}" alt="Fotografia"></a>`)}</div>` : ''}

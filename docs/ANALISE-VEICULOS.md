@@ -122,6 +122,6 @@ incompletas, sem fechamento de peso, identificação não retirada) e relatório
 | V6 | Autorização: o **próprio usuário logado** é o responsável e **assina na tela**; assinatura **obrigatória**. |
 | V7 | Motivo: **texto livre**, com opção de escolher um **motivo do cadastro** (painel → Motivos de autorização). |
 | V8 | Fotos **opcionais**. |
-| V9 | Sem versão nem data de aprovação por enquanto (mostra só o que está no documento). |
+| V9 | Sem versão nem data de aprovação por enquanto (mostra só o que está no documento). Atualização: o administrador pode preencher versão e data e trocar os nomes do cabeçalho em Modelos de checklist (1.3.0). |
 | V10 | PDF **por período** no formato da planilha (folha deitada, um veículo por linha) **e** PDF de cada registro. |
 | V11 | Placa: aceita o formato antigo (ABC-1234) e o Mercosul (ABC1D23); fora disso, **avisa** que pode estar incorreta, sem bloquear. |

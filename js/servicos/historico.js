@@ -30,7 +30,8 @@
     usuario: 'Usuário',
     cultivar: 'Cultivar',
     veiculo: 'Registro de veículo',
-    motivo: 'Motivo de autorização'
+    motivo: 'Motivo de autorização',
+    documentoVeiculo: 'Ficha de veículo (cabeçalho)'
   };
 
   function texto(v) {

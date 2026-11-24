@@ -41,6 +41,7 @@ repo.loteLocal(ops)  -> sempre no aparelho; usado no preenchimento (o envio é p
 | `cultivares` | `id` | Cadastro de cultivares: `nome`, `ativa`, quem criou/alterou (banco local versão 2; servidor `ckl_cultivares`, `supabase/02_cultivares.sql`) |
 | `veiculos` | `id` | Conferência de descarga ou autorização sem vistoria (`tipo`), um por veículo; fotos em `fotos` com `execucaoId` = id do registro (banco local versão 3; servidor `ckl_veiculos`, `supabase/03_veiculos.sql`) |
 | `motivos` | `id` | Motivos padrão da autorização (mesmo formato das cultivares; servidor `ckl_motivos`) |
+| `documentosVeiculo` | `id` (`conferencia` / `autorizacao`) | Cabeçalho editado das fichas de veículo (servidor `ckl_documentos_veiculo`); sem registro vale o de `formularios-veiculos.js` |
 
 ## Onde está cada regra
 
@@ -54,7 +55,7 @@ repo.loteLocal(ops)  -> sempre no aparelho; usado no preenchimento (o envio é p
 | Supabase (login, baixar novidades, enviar) | `js/servicos/nuvem.js` |
 | Relatório PDF | `js/servicos/pdf.js` |
 | Excel | `js/servicos/excel.js` |
-| Limpeza de veículos (regras, pendências, envio, correção) | `js/servicos/veiculos.js`, textos em `js/dados/formularios-veiculos.js` |
+| Limpeza de veículos (regras, pendências, envio, correção) | `js/servicos/veiculos.js`, textos em `js/dados/formularios-veiculos.js`, cabeçalho editável em `js/servicos/documentos-veiculo.js` |
 | PDF dos veículos (registro e período) | `js/servicos/pdf-veiculos.js` |
 | Cadastros simples (cultivares, motivos) | `js/servicos/cadastro-simples.js`, `js/servicos/cultivares.js` |
 | Aplicativo do celular | `js/ui/operador.js`, `js/ui/veiculos-app.js`, `js/ui/assinatura.js` |

@@ -4,7 +4,8 @@
    Fonte: "03-CONFERENCIA DE VEICULOS LIMPEZA DE CAÇAMBA.xlsx" (aba Planilha2) e
    "AUTORIZAÇÃO PARA NÃO REALIZAR LIMPEZA DE CAÇAMBA.xlsx" (aba Registro).
    Texto copiado exatamente como está nos documentos (ver docs/ANALISE-VEICULOS.md).
-   Os documentos não têm versão nem data de aprovação (decisão V9).
+   Os documentos não têm versão nem data de aprovação (decisão V9). O administrador pode
+   mudar o quadro de identificação no painel (js/servicos/documentos-veiculo.js).
    ========================================================================== */
 (function (global) {
   'use strict';

@@ -17,10 +17,76 @@
           <div><h1>Modelos de checklist</h1><p>Cada UBS e cada secador tem o próprio checklist, com os equipamentos do documento original</p></div>
           <div class="pagina-acoes"><button type="button" class="btn btn-primario" data-acao="novo">${icone('mais', 18)}<span>Novo checklist</span></button></div>
         </header>
-        <div id="md-lista"><p class="texto-menor">Carregando…</p></div>`;
+        <div id="md-lista"><p class="texto-menor">Carregando…</p></div>
+        <div id="md-veiculos"></div>`;
 
       function carregar() {
+        desenharVeiculos();
         return CKL.modelos.listar().then((l) => { if (!montado) return; modelos = l; desenhar(); }).catch(ui.erro);
+      }
+
+      /* ---------- Fichas de limpeza de veículo (só o cabeçalho é editável) ---------- */
+      const DV = () => CKL.documentosVeiculo;
+      function desenharVeiculos() {
+        if (!montado) return;
+        el.querySelector('#md-veiculos').innerHTML = String(html`
+          <section class="pilha">
+            <h2 class="secao-titulo">Limpeza de veículo · 2 fichas</h2>
+            <div class="ck-modelos">${DV().TIPOS.map((t) => {
+              const f = CKL.formulariosVeiculos[t], d = DV().atual(t);
+              return html`
+                <article class="cartao ck-modelo">
+                  <header><strong>${f.nome}</strong><span class="selos">${ui.seloSimples('Ativo', 'selo-registrada', 'check')}</span></header>
+                  ${ui.dados([['Identificação', d.identificacao], ['Versão', d.versaoDocumento || '—'], ['Elaborado por', d.elaboradoPor],
+                    ['Revisado por', d.revisadoPor], ['Aprovado por', d.aprovadoPor], ['Aprovado em', d.aprovadoEm ? util.fmtData(d.aprovadoEm) : '—']], 'dados-3col')}
+                  ${d.atualizadoEm ? html`<p class="texto-menor">Cabeçalho alterado em ${util.fmtDataHora(d.atualizadoEm)} por ${d.atualizadoPor}.</p>` : ''}
+                  <div class="acoes-linha">
+                    <button type="button" class="btn btn-secundario btn-p" data-acao="vei-editar" data-id="${t}">${icone('editar', 16)}<span>Editar cabeçalho</span></button>
+                    <button type="button" class="btn btn-secundario btn-p" data-acao="vei-historico" data-id="${t}">${icone('historico', 16)}<span>Histórico</span></button>
+                  </div>
+                </article>`;
+            })}</div>
+            <p class="texto-menor">As perguntas das fichas seguem o documento original e não mudam aqui. Cada registro de veículo guarda o cabeçalho do dia em que foi feito.</p>
+          </section>`);
+      }
+
+      function editarVeiculo(tipo) {
+        const f = CKL.formulariosVeiculos[tipo], d = DV().atual(tipo), campos = DV().CAMPOS;
+        ui.modal({
+          titulo: f.nome + ' — cabeçalho', largura: 'g',
+          conteudo: html`
+            <form class="formulario" novalidate onsubmit="return false">
+              <p class="texto-menor">${f.titulo}. Original: ${f.origem.arquivo} · aba "${f.origem.aba}". Os registros já feitos continuam com o cabeçalho que usaram.</p>
+              <div class="formulario-linha">
+                ${Object.keys(campos).map((c) => html`<div class="campo"><label for="dv-${c}">${campos[c]}</label>
+                  <input id="dv-${c}" data-c="${c}" ${c === 'aprovadoEm' ? ui.bruto('type="date"') : ''} value="${d[c] || ''}" autocomplete="off"></div>`)}
+              </div>
+              <div class="campo"><label for="dv-motivo">Motivo da alteração</label><textarea id="dv-motivo" rows="2" maxlength="300" placeholder="Ex.: troca do aprovador, revisão 2 do documento"></textarea></div>
+              <p class="form-erro" id="dv-erro" role="alert" hidden></p>
+            </form>`,
+          acoes: [
+            { rotulo: 'Voltar', classe: 'btn-secundario', acao: (mm) => mm.fechar() },
+            { rotulo: 'Salvar', classe: 'btn-primario', acao: (mm, botao) => {
+              const dados = {};
+              mm.corpo.querySelectorAll('[data-c]').forEach((i) => { dados[i.dataset.c] = i.value; });
+              ui.ocupar(botao, () => DV().salvar(tipo, dados, mm.corpo.querySelector('#dv-motivo').value)).then((mudou) => {
+                mm.fechar();
+                ui.aviso(mudou ? 'Cabeçalho salvo. Vale para os próximos registros.' : 'Nada foi alterado.', 'ok');
+                desenharVeiculos();
+              }).catch((e) => { const x = mm.corpo.querySelector('#dv-erro'); x.textContent = ui.mensagemDe(e); x.hidden = false; if (!e || !e.amigavel) console.error(e); });
+            } }
+          ]
+        });
+      }
+
+      function historicoVeiculo(tipo) {
+        CKL.historico.daEntidade('documentoVeiculo', tipo).then((ev) => {
+          ui.modal({
+            titulo: CKL.formulariosVeiculos[tipo].nome + ' — histórico do cabeçalho', largura: 'g',
+            conteudo: ev.length ? html`${CKL.telas.adm.eventosHtml(ev)}` : html`<p class="texto-menor">O cabeçalho ainda não foi alterado. Vale o do documento original.</p>`,
+            acoes: [{ rotulo: 'Fechar', classe: 'btn-secundario', acao: (mm) => mm.fechar() }]
+          });
+        }).catch(ui.erro);
       }
       function desenhar() {
         const alvo = el.querySelector('#md-lista');
@@ -196,7 +262,9 @@
         const b = ev.target.closest('[data-acao]');
         if (!b) return;
         const id = b.dataset.id, a = b.dataset.acao;
-        if (a === 'editar') editar(id);
+        if (a === 'vei-editar') editarVeiculo(id);
+        else if (a === 'vei-historico') historicoVeiculo(id);
+        else if (a === 'editar') editar(id);
         else if (a === 'versoes') versoes(id);
         else if (a === 'novo') novo();
         else if (a === 'carregar') ui.ocupar(b, () => CKL.modelos.carregarOriginais()).then(() => { ui.aviso('Os 16 checklists originais foram carregados.', 'ok'); carregar(); }).catch(ui.erro);
@@ -210,7 +278,7 @@
           }).then((r) => r && CKL.modelos.definirSituacao(id, ativar, r.motivo).then(() => { ui.aviso(m.nome + (ativar ? ' ativado.' : ' desativado.'), 'ok'); carregar(); })).catch(ui.erro);
         }
       });
-      const desligar = [CKL.eventos.ouvir('modelos:alterado', carregar)];
+      const desligar = [CKL.eventos.ouvir('modelos:alterado', carregar), CKL.eventos.ouvir(CKL.documentosVeiculo.APLICADO, desenharVeiculos)];
       carregar();
       return () => { montado = false; desligar.forEach((f) => f()); };
     }
