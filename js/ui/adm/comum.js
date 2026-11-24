@@ -10,6 +10,32 @@
   const adm = CKL.telas.adm;
   const ST = cfg.STATUS;
 
+  /**
+   * Aviso "cadastros só neste computador": confere com o servidor e, se faltar algo
+   * lá (modelos criados quando o sistema ainda não tinha servidor), oferece o envio.
+   */
+  adm.avisoCadastrosLocais = function (alvo) {
+    const CL = CKL.nuvem && CKL.nuvem.ativa && CKL.nuvem.cadastrosLocais;
+    if (!alvo || !CL) return;
+    CL.conferir().then((faltam) => {
+      const resumo = CL.resumo(faltam);
+      if (!resumo || !alvo.isConnected) { alvo.innerHTML = ''; return; }
+      alvo.innerHTML = String(html`
+        <div class="alerta alerta-erro">${icone('alerta', 20)}<div>
+          <strong>Há cadastros só neste computador: ${resumo}.</strong>
+          <p>Eles foram criados quando o sistema ainda funcionava sem servidor e não chegaram ao banco central. Por isso os celulares não os recebem
+            (por exemplo, os checklists de UBS e secador não aparecem no aplicativo). Envie para o servidor; nada é apagado.</p>
+          <button type="button" class="btn btn-primario" data-acao-local="enviar">${icone('upload', 18)}<span>Enviar para o servidor</span></button>
+        </div></div>`);
+      alvo.querySelector('[data-acao-local="enviar"]').addEventListener('click', (ev) => {
+        ui.ocupar(ev.currentTarget, () => CL.enviar(faltam)).then((n) => {
+          ui.aviso(util.plural(n, 'registro enviado', 'registros enviados') + ' ao servidor. Os celulares recebem na próxima sincronização.', 'ok', 8000);
+          adm.avisoCadastrosLocais(alvo);
+        }).catch(ui.erro);
+      });
+    }).catch((e) => console.warn('[cadastros locais]', e && e.message));
+  };
+
   /** Linha do tempo de eventos de auditoria. */
   adm.eventosHtml = function (eventos) {
     if (!eventos.length) return html`<p class="texto-menor">Nenhuma alteração registrada.</p>`;

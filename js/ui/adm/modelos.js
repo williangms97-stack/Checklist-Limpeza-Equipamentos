@@ -17,9 +17,11 @@
           <div><h1>Modelos de checklist</h1><p>Cada UBS e cada secador tem o próprio checklist, com os equipamentos do documento original</p></div>
           <div class="pagina-acoes"><button type="button" class="btn btn-primario" data-acao="novo">${icone('mais', 18)}<span>Novo checklist</span></button></div>
         </header>
+        <div id="md-locais"></div>
         <div id="md-lista"><p class="texto-menor">Carregando…</p></div>
         <div id="md-veiculos"></div>`;
 
+      CKL.telas.adm.avisoCadastrosLocais(el.querySelector('#md-locais'));
       function carregar() {
         desenharVeiculos();
         return CKL.modelos.listar().then((l) => { if (!montado) return; modelos = l; desenhar(); }).catch(ui.erro);

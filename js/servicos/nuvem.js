@@ -439,5 +439,70 @@
     }
   });
 
-  CKL.nuvem = { ativa: true, configurado: true, cliente: sb, sincronia: sincronia, rpc: rpc, online: online, url: S.URL };
+  /* ======================================================================
+     Cadastros que ficaram só neste computador
+     As versões 1.0.0 e 1.0.1 funcionavam sem servidor e criavam os modelos no
+     próprio navegador. Ao ligar o servidor, eles continuaram só aqui. O
+     administrador confere e envia (sem apagar nada do servidor).
+     ====================================================================== */
+  var CADASTROS = ['modelos', 'modelosVersoes', 'cultivares', 'motivos'];
+  var ENTIDADES_CADASTRO = ['modelo', 'cultivar', 'motivo'];
+  var ROTULO_CADASTRO = { modelos: 'checklists (modelos)', modelosVersoes: 'versões de modelo', cultivares: 'cultivares', motivos: 'motivos de autorização', historico: 'registros de histórico' };
+
+  function chaveLocal(colecao, d) { return colecao === 'modelosVersoes' ? d.chave : d.id; }
+
+  function idsNoServidor(colecao) {
+    var ids = {}, desde = null, depoisId = '';
+    function pagina() {
+      return rpc('ckl_puxar', { colecao: colecao, desde: desde, depoisId: depoisId, limite: 1000 }).then(function (r) {
+        var linhas = (r && r.linhas) || [];
+        linhas.forEach(function (l) { ids[l.id] = true; });
+        if (linhas.length === 1000) { var u = linhas[linhas.length - 1]; desde = u.atualizadoEm; depoisId = u.id; return pagina(); }
+        return ids;
+      });
+    }
+    return pagina();
+  }
+
+  var cadastrosLocais = {
+    /** Devolve { colecao: [documentos que existem aqui e não no servidor] } (só as coleções com falta). */
+    conferir: function () {
+      if (!auth.ehAdm() || !online()) return Promise.resolve({});
+      var faltam = {};
+      return CADASTROS.concat(['historico']).reduce(function (cadeia, c) {
+        return cadeia.then(function () {
+          return Promise.all([local[c].listar(), idsNoServidor(c)]).then(function (r) {
+            var lista = r[0].filter(function (d) {
+              if (c === 'historico' && ENTIDADES_CADASTRO.indexOf(d.entidade) < 0) return false;
+              return !r[1][chaveLocal(c, d)];
+            });
+            if (lista.length) faltam[c] = lista;
+          }, function (e) { if (COLECOES_OPCIONAIS.indexOf(c) < 0) throw e; });
+        });
+      }, Promise.resolve()).then(function () {
+        // histórico sozinho (sem cadastro faltando) não justifica o aviso
+        var cs = Object.keys(faltam);
+        return cs.length === 1 && cs[0] === 'historico' ? {} : faltam;
+      });
+    },
+    resumo: function (faltam) {
+      return Object.keys(faltam).filter(function (c) { return c !== 'historico'; })
+        .map(function (c) { return faltam[c].length + ' ' + ROTULO_CADASTRO[c]; }).join(', ');
+    },
+    /** Envia ao servidor o que só existe aqui (gravação normal do administrador; nada é apagado). */
+    enviar: function (faltam) {
+      CKL.auth.exigirAdm();
+      var ops = [];
+      Object.keys(faltam).forEach(function (c) {
+        faltam[c].forEach(function (d) { ops.push({ colecao: c, tipo: 'salvar', valor: d }); });
+      });
+      if (!ops.length) return Promise.resolve(0);
+      return enviarLote(ops).then(function () {
+        Object.keys(faltam).forEach(function (c) { if (EVENTO[c]) CKL.eventos.emitir(EVENTO[c], { origem: 'servidor' }); });
+        return ops.length;
+      });
+    }
+  };
+
+  CKL.nuvem = { ativa: true, configurado: true, cliente: sb, sincronia: sincronia, rpc: rpc, online: online, url: S.URL, cadastrosLocais: cadastrosLocais };
 })(window);

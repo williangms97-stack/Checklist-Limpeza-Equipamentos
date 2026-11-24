@@ -26,9 +26,11 @@
             <button type="button" class="btn btn-secundario" data-acao="excel">${icone('planilha', 18)}<span>Exportar Excel</span></button>
           </div>
         </header>
+        <div id="pn-locais"></div>
         <div id="pn-filtros"></div>
         <div id="pn-corpo"><p class="texto-menor">Carregando…</p></div>`;
 
+      adm.avisoCadastrosLocais(el.querySelector('#pn-locais'));
       function carregar() {
         return Promise.all([CKL.modelos.listar(), CKL.execucoes.listar(), CKL.naoConformidades.listar()]).then((r) => {
           if (!montado) return;
